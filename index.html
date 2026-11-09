@@ -1,189 +1,203 @@
+
 <!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DMX 294 PRO — Quản lý doanh thu</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DMX 294 PRO</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-:root{--blue:#0878d1;--navy:#07549b;--green:#19a65a;--bg:#f3f6fa;--ink:#172334;--muted:#6b7788;--line:#dce4ee}
-*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-header{background:linear-gradient(120deg,#0878d1,#034b91);color:#fff;padding:18px 22px;display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}
-h1{font-size:22px;margin:0}header small{opacity:.85}main{max-width:1400px;margin:auto;padding:18px}
-.toolbar,.panel,.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px;margin-bottom:14px;box-shadow:0 3px 12px #1232}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-button,.btn{border:0;border-radius:9px;padding:10px 14px;background:var(--blue);color:white;font-weight:650;cursor:pointer}
-button.secondary{background:#e8f1fb;color:#07549b}button.danger{background:#dc3545}button.green{background:var(--green)}
-select,input,textarea{font:inherit;border:1px solid #cbd6e2;border-radius:8px;padding:9px;background:white;color:var(--ink)}
-input[type=file]{max-width:100%}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.stat{margin:0;padding:14px}.stat span{color:var(--muted);font-size:13px}.stat strong{display:block;font-size:23px;margin-top:5px}
-.two{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.panel h2{font-size:17px;margin:0 0 12px}
-.note{font-size:13px;color:var(--muted)}.drop{border:2px dashed #9bbfe3;border-radius:10px;padding:16px;text-align:center;background:#f7fbff}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{background:#edf5fc;position:sticky;top:0}td input{width:100%;min-width:90px;padding:6px}
-.tablewrap{overflow:auto;max-height:460px;border:1px solid var(--line);border-radius:8px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.pill{display:inline-block;background:#e8f4ed;color:#08783c;border-radius:99px;padding:3px 9px;font-size:12px}
-@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}main{padding:10px}.stat strong{font-size:19px}}
+:root{--blue:#0876d1;--bg:#eef4fa;--line:#d5e1ee;--text:#17324c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font:14px Arial;color:var(--text)}
+header{background:linear-gradient(90deg,#075ca8,#087bd8);color:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header strong{font-size:20px}
+main{max-width:1400px;margin:18px auto;padding:0 14px}
+.toolbar,.panel,.kpi{background:white;border:1px solid var(--line);border-radius:9px;padding:14px;margin-bottom:12px}
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+button{border:0;background:var(--blue);color:white;padding:9px 13px;border-radius:6px;cursor:pointer;font-weight:600}
+button.secondary{background:#e8f2fc;color:#075ca8;border:1px solid #c8dff5}
+button.danger{background:#dc3545}
+input,select,textarea{padding:9px;border:1px solid #c8d7e6;border-radius:5px;background:white;color:#17324c;max-width:100%}
+input[type=file]{padding:5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi small{color:#6a8299}.kpi b{display:block;font-size:22px;margin-top:8px}
+.tablewrap{overflow:auto;max-height:460px;border:1px solid var(--line);border-radius:6px}
+table{width:100%;border-collapse:collapse;min-width:800px}
+th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
+th{background:#eaf3fb;position:sticky;top:0}
+td input{width:100%;min-width:70px;padding:6px}
+.sectiontitle{font-weight:bold;margin-bottom:10px}
+.hint{font-size:12px;color:#637c94;line-height:1.5}
+.tag{background:#eaf4ff;color:#075ca8;border-radius:20px;padding:4px 9px;font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.wide{width:100%}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}main{padding:0 8px}header{padding:12px}}
 </style>
 </head>
 <body>
-<header><div><h1>DMX 294 PRO</h1><small>Quản lý doanh thu • OCR • đa cửa hàng</small></div><div><label for="store">Cửa hàng:</label> <select id="store"></select> <button id="addStore" class="secondary">＋ Thêm cửa hàng</button></div></header>
+<header>
+<div><strong>DMX 294 PRO</strong><div style="font-size:12px;margin-top:4px">Quản lý doanh thu · OCR · đa cửa hàng</div></div>
+<div class="row"><label>Cửa hàng <select id="storeSelect"></select></label><button id="addStore">+ Thêm cửa hàng</button></div>
+</header>
 <main>
 <div class="toolbar">
 <label>Ngày báo cáo <input type="date" id="reportDate"></label>
-<button id="save" class="green">Lưu dữ liệu</button>
-<button id="export" class="secondary">Xuất Excel/CSV</button>
-<button id="backup" class="secondary">Sao lưu JSON</button>
-<label class="btn secondary" for="restore">Khôi phục JSON</label><input id="restore" type="file" accept=".json" hidden>
-<button id="clear" class="danger">Xóa báo cáo ngày</button>
+<button id="save">Lưu dữ liệu</button>
+<button class="secondary" id="export">Xuất JSON</button>
+<label class="secondary" style="padding:8px;border-radius:6px">Nhập JSON <input type="file" id="import" accept=".json,application/json" style="width:150px"></label>
+<button class="danger" id="clear">Xóa báo cáo ngày</button>
 </div>
+
+<div class="kpis">
+<div class="kpi"><small>Tổng doanh thu</small><b id="sumRev">0 đ</b></div>
+<div class="kpi"><small>Số lượng</small><b id="sumQty">0</b></div>
+<div class="kpi"><small>Nhân viên có doanh thu</small><b id="activeStaff">0</b></div>
+<div class="kpi"><small>Nhân viên trong danh sách</small><b id="staffCount">0</b></div>
+</div>
+
 <div class="grid">
-<div class="stat"><span>Tổng doanh thu</span><strong id="total">0 ₫</strong></div>
-<div class="stat"><span>Số lượng</span><strong id="qty">0</strong></div>
-<div class="stat"><span>Nhân viên có doanh thu</span><strong id="staffCount">0</strong></div>
-<div class="stat"><span>Ngành hàng</span><strong id="catCount">0</strong></div>
-</div>
-<div class="two" style="margin-top:14px">
 <section class="panel">
-<h2>1. Nhập báo cáo / OCR</h2>
-<div class="drop"><p><b>Chọn ảnh báo cáo doanh thu</b></p><input type="file" id="images" accept="image/*" multiple><p class="note">OCR chạy ngay trên trình duyệt bằng Tesseract.js. Ảnh không tải lên máy chủ.</p><button id="ocr">Đọc chữ từ ảnh</button></div>
-<div id="ocrStatus" class="note" style="margin-top:8px"></div>
-<textarea id="ocrText" rows="7" style="width:100%;margin-top:10px" placeholder="Nội dung OCR sẽ xuất hiện ở đây. Có thể dán text báo cáo vào..."></textarea>
-<div class="actions"><button id="parseOCR" class="green">Phân tích OCR & tạo bảng</button></div>
-<p class="note">Bộ phân tích thử nhận dạng dòng có số liệu. Hãy kiểm tra bảng trước khi lưu vì OCR có thể nhầm số hoặc cột.</p>
+<div class="sectiontitle">1. Nhập báo cáo / OCR</div>
+<div class="row"><input type="file" id="imageFile" accept="image/*"><button id="runOcr">Đọc ảnh bằng OCR</button></div>
+<p class="hint">OCR chạy trên trình duyệt. Kết quả cần đối chiếu và nhập/chỉnh số liệu ở bảng bên dưới trước khi lưu.</p>
+<textarea id="ocrText" class="wide" rows="8" placeholder="Văn bản OCR sẽ xuất hiện tại đây..."></textarea>
+<div id="ocrStatus" class="hint"></div>
 </section>
+
 <section class="panel">
-<h2>2. Thêm dòng dữ liệu</h2>
-<div style="display:grid;gap:8px">
-<input id="employeeCode" placeholder="Mã nhân viên (nếu có)">
-<input id="employeeName" placeholder="Họ tên nhân viên *">
-<input id="category" placeholder="Ngành hàng (VD: Điện thoại)">
-<input id="quantity" type="number" min="0" placeholder="Số lượng">
-<input id="revenue" type="number" min="0" placeholder="Doanh thu (VNĐ)">
-<input id="cash" type="number" min="0" placeholder="Thanh toán thẳng (VNĐ)">
-<input id="installment" type="number" min="0" placeholder="Trả góp (VNĐ)">
-<button id="addRow">＋ Thêm vào bảng</button>
+<div class="sectiontitle">2. Thêm / cập nhật nhân viên</div>
+<div class="row"><input id="empId" placeholder="Mã nhân viên"><input id="empName" placeholder="Họ tên nhân viên" style="flex:1;min-width:180px"></div>
+<div class="row" style="margin-top:8px">
+<input id="empQty" type="number" min="0" placeholder="Số lượng">
+<input id="empRev" type="number" min="0" placeholder="Doanh thu (đ)">
+<input id="empStraight" type="number" min="0" placeholder="Trả thẳng (đ)">
+<input id="empInstall" type="number" min="0" placeholder="Trả góp (đ)">
 </div>
+<div class="row" style="margin-top:8px"><select id="empCat"></select><button id="addEmp">+ Thêm dòng</button></div>
+<p class="hint">Mỗi dòng là một nhân viên + ngành hàng. Nhân viên nhiều ngành có thể thêm nhiều dòng cùng mã.</p>
 </section>
 </div>
+
 <section class="panel">
-<h2>3. Kiểm tra & chỉnh sửa dữ liệu</h2>
-<div class="actions"><button id="addBlank" class="secondary">＋ Dòng trống</button><button id="dedupe" class="secondary">Gộp dòng trùng (cùng mã/tên + ngành hàng)</button><button id="recalc" class="secondary">Tính lại</button></div>
-<div class="tablewrap"><table><thead><tr><th>#</th><th>Mã NV</th><th>Họ tên</th><th>Ngành hàng</th><th>SL</th><th>Doanh thu</th><th>Thẳng</th><th>Trả góp</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
-<p class="note">Mỗi dòng là một nhân viên–ngành hàng. Nhân viên xuất hiện nhiều ngành hàng sẽ được tổng hợp theo tên/mã, không cộng lặp giữa các dòng khác nhau.</p>
+<div class="sectiontitle">3. Kiểm tra & chỉnh sửa dữ liệu <span class="tag">Có thể sửa trực tiếp</span></div>
+<div class="tablewrap"><table>
+<thead><tr><th>Mã NV</th><th>Họ tên</th><th>Ngành hàng</th><th>Số lượng</th><th>Doanh thu (đ)</th><th>Trả thẳng (đ)</th><th>Trả góp (đ)</th><th></th></tr></thead>
+<tbody id="dataRows"></tbody></table></div>
+<div class="row" style="margin-top:10px"><button class="secondary" id="addBlank">+ Dòng trống</button><button id="save2">Lưu và tính lại</button></div>
 </section>
-<div class="two">
-<section class="panel"><h2>4. Tổng hợp nhân viên</h2><div class="tablewrap"><table><thead><tr><th>Nhân viên</th><th>Số lượng</th><th>Doanh thu</th><th>Thẳng</th><th>Trả góp</th></tr></thead><tbody id="staffSummary"></tbody></table></div></section>
-<section class="panel"><h2>5. Tổng hợp ngành hàng</h2><div class="tablewrap"><table><thead><tr><th>Ngành hàng</th><th>Số lượng</th><th>Doanh thu</th></tr></thead><tbody id="catSummary"></tbody></table></div></section>
+
+<div class="grid">
+<section class="panel"><div class="sectiontitle">4. Tổng hợp nhân viên</div>
+<div class="tablewrap"><table style="min-width:550px"><thead><tr><th>Mã NV</th><th>Nhân viên</th><th>Số lượng</th><th>Doanh thu</th><th>Trả thẳng</th><th>Trả góp</th></tr></thead><tbody id="staffSummary"></tbody></table></div></section>
+<section class="panel"><div class="sectiontitle">5. Tổng hợp ngành hàng</div>
+<div class="tablewrap"><table style="min-width:450px"><thead><tr><th>Ngành hàng</th><th>Số lượng</th><th>Doanh thu</th></tr></thead><tbody id="catSummary"></tbody></table></div></section>
 </div>
-<p class="note">Dữ liệu lưu trong trình duyệt của thiết bị này (localStorage). Không dùng chung tự động giữa máy tính/điện thoại. Sao lưu JSON thường xuyên; không đưa dữ liệu nhân viên nhạy cảm lên repo GitHub công khai.</p>
+<p class="hint">Dữ liệu lưu trên trình duyệt hiện tại (localStorage), phân tách theo cửa hàng và ngày. Xuất JSON để sao lưu/chuyển máy. Chưa đồng bộ nhiều người dùng qua mạng.</p>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
 <script>
-const $=id=>document.getElementById(id), money=n=>Number(n||0).toLocaleString('vi-VN')+' ₫';
-let db=JSON.parse(localStorage.getItem('dmx294pro_v2')||'{"stores":{"DMX 294 Nguyễn Ảnh Thủ":{}},"active":"DMX 294 Nguyễn Ảnh Thủ"}');
-let data=[];
-function storeName(){return $('store').value}
-function keyDate(){return $('reportDate').value||new Date().toISOString().slice(0,10)}
-function saveDB(){db.stores[storeName()][keyDate()]=data;localStorage.setItem('dmx294pro_v2',JSON.stringify(db))}
-function loadDay(){data=structuredClone(db.stores[storeName()]?.[keyDate()]||[]);render()}
-function render(){
- $('rows').innerHTML=data.map((r,i)=>`<tr><td>${i+1}</td><td><input value="${esc(r.code)}" data-i="${i}" data-k="code"></td><td><input value="${esc(r.name)}" data-i="${i}" data-k="name"></td><td><input value="${esc(r.cat)}" data-i="${i}" data-k="cat"></td><td><input type="number" value="${r.qty||0}" data-i="${i}" data-k="qty"></td><td><input type="number" value="${r.rev||0}" data-i="${i}" data-k="rev"></td><td><input type="number" value="${r.cash||0}" data-i="${i}" data-k="cash"></td><td><input type="number" value="${r.inst||0}" data-i="${i}" data-k="inst"></td><td><button class="danger" data-del="${i}">×</button></td></tr>`).join('');
- const staff={},cats={};data.forEach(r=>{let k=(r.code||r.name||'Chưa rõ').trim();staff[k]??={name:r.name||k,qty:0,rev:0,cash:0,inst:0};['qty','rev','cash','inst'].forEach(x=>staff[k][x]+=Number(r[x]||0));let c=r.cat||'Chưa phân loại';cats[c]??={qty:0,rev:0};cats[c].qty+=Number(r.qty||0);cats[c].rev+=Number(r.rev||0)});
- let rev=data.reduce((s,r)=>s+Number(r.rev||0),0),qty=data.reduce((s,r)=>s+Number(r.qty||0),0);
- $('total').textContent=money(rev);$('qty').textContent=qty.toLocaleString('vi-VN');$('staffCount').textContent=Object.values(staff).filter(x=>x.rev>0).length;$('catCount').textContent=Object.keys(cats).length;
- $('staffSummary').innerHTML=Object.values(staff).sort((a,b)=>b.rev-a.rev).map(s=>`<tr><td>${esc(s.name)}</td><td>${s.qty}</td><td>${money(s.rev)}</td><td>${money(s.cash)}</td><td>${money(s.inst)}</td></tr>`).join('');
- $('catSummary').innerHTML=Object.entries(cats).sort((a,b)=>b[1].rev-a[1].rev).map(([c,v])=>`<tr><td>${esc(c)}</td><td>${v.qty}</td><td>${money(v.rev)}</td></tr>`).join('');
+const CATS=[
+'-1 - CHƯA PHÂN LOẠI','1 - Viễn thông di động','2 - Laptop','3 - Apple',
+'4 - Phụ kiện - Đồng hồ','5 - Điện tử','6 - Tủ lạnh, đông, mát',
+'7 - Máy giặt, sấy','8 - Máy lạnh & Máy nước nóng','9 - Gia dụng',
+'10 - Dịch vụ tiện ích','11 - NH Tận Tâm'
+];
+const $=id=>document.getElementById(id);
+let stores=JSON.parse(localStorage.getItem('dmx294_stores')||'null')||[{id:'dmx294',name:'DMX 294 Nguyễn Ảnh Thủ'}];
+let storeId=stores[0].id,records=[];
+$('empCat').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
+$('reportDate').value=new Date().toISOString().slice(0,10);
+
+function renderStores(){
+$('storeSelect').innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+$('storeSelect').value=storeId;
 }
+function key(){return `dmx294_data_${storeId}_${$('reportDate').value}`}
+function load(){records=JSON.parse(localStorage.getItem(key())||'[]');draw()}
+function money(n){return (Number(n)||0).toLocaleString('vi-VN')+' đ'}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-$('rows').addEventListener('change',e=>{let t=e.target;if(t.dataset.i!==undefined){let r=data[+t.dataset.i],k=t.dataset.k;r[k]=['qty','rev','cash','inst'].includes(k)?Number(t.value||0):t.value;render()}});
-$('rows').addEventListener('click',e=>{if(e.target.dataset.del!==undefined){data.splice(+e.target.dataset.del,1);render()}});
-function addForm(){let name=$('employeeName').value.trim();if(!name){alert('Vui lòng nhập họ tên nhân viên');return}data.push({code:$('employeeCode').value.trim(),name,cat:$('category').value.trim()||'Chưa phân loại',qty:+$('quantity').value||0,rev:+$('revenue').value||0,cash:+$('cash').value||0,inst:+$('installment').value||0});['employeeCode','employeeName','category','quantity','revenue','cash','installment'].forEach(id=>$(id).value='');render()}
-$('addRow').onclick=addForm;$('addBlank').onclick=()=>{data.push({code:'',name:'',cat:'',qty:0,rev:0,cash:0,inst:0});render()};
-$('save').onclick=()=>{saveDB();alert('Đã lưu báo cáo '+keyDate()+' — '+storeName())};$('recalc').onclick=render;
-$('clear').onclick=()=>{if(confirm('Xóa toàn bộ dữ liệu ngày '+keyDate()+' của '+storeName()+'?')){data=[];saveDB();render()}};
-$('dedupe').onclick=()=>{let m=new Map();data.forEach(r=>{let k=[r.code||r.name,r.cat].join('|');if(!m.has(k))m.set(k,{...r});else ['qty','rev','cash','inst'].forEach(x=>m.get(k)[x]+=Number(r[x]||0))});data=[...m.values()];render();alert('Đã gộp các dòng cùng nhân viên + ngành hàng. Hãy kiểm tra lại để tránh gộp nhầm.')};
-$('reportDate').value=new Date().toISOString().slice(0,10);$('reportDate').onchange=loadDay;
-function refreshStores(){let s=$('store');s.innerHTML=Object.keys(db.stores).map(n=>`<option ${n===db.active?'selected':''}>${esc(n)}</option>`).join('');}
-$('store').onchange=()=>{db.active=storeName();localStorage.setItem('dmx294pro_v2',JSON.stringify(db));loadDay()};
-$('addStore').onclick=()=>{let n=prompt('Tên cửa hàng mới:');if(n&&n.trim()){n=n.trim();if(db.stores[n])return alert('Cửa hàng đã tồn tại');db.stores[n]={};db.active=n;
-function parseOCRToRows(){
- const raw=$('ocrText').value.trim();
- if(!raw){alert('Chưa có OCR.');return}
- // Strictly avoid treating date/header/summary lines as employees.
- const lines=raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- const dateRe=/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}\b|\b20\d{2}\b/;
- const headerRe=/doanh thu|ngành hàng|nganh hang|báo cáo|bao cao|cửa hàng|chi tiết|chi tiet|thống kê|thong ke|tổng|tong|thanh toán|trả góp|số lượng|so luong|nhóm hàng|nhom hang/i;
- const categoryRe=/điện thoại|dien thoai|apple|mobile|laptop|phụ kiện|phu kien|điện máy|dien may|tủ lạnh|tu lanh|máy giặt|may giat|điều hòa|dieu hoa|gia dụng|gia dung|dịch vụ|dich vu|ngành hàng|nganh hang/i;
- const moneyTokens=s=>{const m=s.match(/\b\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?\b|\b\d{5,}\b/g)||[];return m.map(v=>Number(v.replace(/[.,]/g,''))).filter(Number.isFinite)};
- const cleanName=s=>s.replace(/[\d.,:;|()[\]{}]+/g,' ').replace(/\s+/g,' ').trim();
- let candidates=[],excluded=0;
- for(const line of lines){
-  if(headerRe.test(line)||dateRe.test(line)||categoryRe.test(line)){excluded++;continue}
-  const nums=moneyTokens(line);
-  if(!nums.length){excluded++;continue}
-  // Only candidate when text begins with a plausible personal name (at least 2 words, no report keywords).
-  const text=cleanName(line);
-  const words=text.split(/\s+/).filter(Boolean);
-  if(words.length<2||words.length>7||/^[A-Z]{2,}\s/.test(text)){excluded++;continue}
-  // Do not infer revenue from arbitrary OCR lines: put amount in review field as tentative.
-  candidates.push({code:'',name:text,cat:'CẦN XÁC NHẬN',qty:0,rev:nums[nums.length-1],cash:0,inst:0});
- }
- if(!candidates.length){
-  $('ocrStatus').textContent='Không đủ điều kiện nhận diện nhân viên tự động. Không tạo dữ liệu để tránh sai doanh thu.';
-  alert('Không nhận diện chắc chắn được nhân viên. Vui lòng dùng báo cáo gốc rõ hơn hoặc nhập dữ liệu có cấu trúc.');
-  return;
- }
- const ok=confirm(`Tìm thấy ${candidates.length} dòng nghi là nhân viên. Doanh thu đang là số tạm đoán, ngành hàng chưa xác định. Thêm vào bảng để bạn rà soát?`);
- if(!ok)return;
- data.push(...candidates);render();
- $('ocrStatus').textContent=`Đã thêm ${candidates.length} dòng DỰ THẢO (chưa xác minh). ${excluded} dòng đã loại. Không dùng làm KPI chính thức.`;
+
+function draw(){
+$('dataRows').innerHTML=records.map((r,i)=>`<tr>
+<td><input value="${esc(r.id)}" data-i="${i}" data-k="id"></td>
+<td><input value="${esc(r.name)}" data-i="${i}" data-k="name"></td>
+<td><select data-i="${i}" data-k="cat">${CATS.map(c=>`<option ${c===r.cat?'selected':''}>${c}</option>`).join('')}</select></td>
+<td><input type="number" value="${r.qty||0}" data-i="${i}" data-k="qty"></td>
+<td><input type="number" value="${r.rev||0}" data-i="${i}" data-k="rev"></td>
+<td><input type="number" value="${r.straight||0}" data-i="${i}" data-k="straight"></td>
+<td><input type="number" value="${r.install||0}" data-i="${i}" data-k="install"></td>
+<td><button class="danger" data-del="${i}">×</button></td></tr>`).join('');
+drawSummariesOnly();
 }
-$('parseOCR').onclick=parseOCRToRows;
-
-refreshStores();loadDay();localStorage.setItem('dmx294pro_v2',JSON.stringify(db))}};
-$('backup').onclick=()=>download(JSON.stringify(db,null,2),'DMX294_backup.json','application/json');
-$('restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.stores)throw Error();db=x;
-function parseOCRToRows(){
- const raw=$('ocrText').value.trim(); if(!raw){alert('Chưa có nội dung OCR. Hãy đọc ảnh hoặc dán text trước.');return}
- const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
- let added=0, skipped=0;
- const skip=/^(tổng|tong|doanh thu|ngành hàng|nganh hang|số lượng|so luong|thanh toán|trả góp|báo cáo|ngày|cửa hàng|---|ocr)/i;
- for(const line of lines){
-  if(skip.test(line)){skipped++;continue}
-  const nums=(line.match(/\d[\d.,]*/g)||[]).map(x=>Number(x.replace(/[.,]/g,''))).filter(n=>Number.isFinite(n));
-  if(nums.length<1){skipped++;continue}
-  let text=line.replace(/\d[\d.,]*/g,' ').replace(/[|:;_\-]/g,' ').replace(/\s+/g,' ').trim();
-  if(text.length<2||/tổng cộng|grand total|toàn cửa hàng/i.test(text)){skipped++;continue}
-  const name=text.slice(0,90), rev=nums[nums.length-1], qty=nums.length>=2?nums[nums.length-2]:0;
-  data.push({code:'',name,cat:'Chưa phân loại',qty,rev,cash:0,inst:0});added++;
- }
- render();$('ocrStatus').textContent=`Phân tích xong: thêm ${added} dòng tạm vào bảng. ${skipped} dòng bỏ qua. Kiểm tra và sửa trước khi lưu.`;
- if(!added)alert('Chưa nhận diện được dòng phù hợp. Cần mẫu OCR rõ hơn hoặc nhập thủ công.');
+function drawSummariesOnly(){
+let staff={},cat={};
+records.forEach(r=>{
+let id=r.id||r.name||'unknown';
+staff[id]??={id,name:r.name,qty:0,rev:0,straight:0,install:0};
+['qty','rev','straight','install'].forEach(k=>staff[id][k]+=Number(r[k])||0);
+cat[r.cat]??={qty:0,rev:0};
+cat[r.cat].qty+=Number(r.qty)||0;cat[r.cat].rev+=Number(r.rev)||0;
+});
+let ss=Object.values(staff);
+$('sumRev').textContent=money(records.reduce((a,r)=>a+(+r.rev||0),0);
+$('sumQty').textContent=records.reduce((a,r)=>a+(+r.qty||0),0).toLocaleString('vi-VN');
+$('activeStaff').textContent=ss.filter(x=>x.rev>0).length;
+$('staffCount').textContent=ss.length;
+$('staffSummary').innerHTML=ss.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.name)}</td><td>${x.qty}</td><td>${money(x.rev)}</td><td>${money(x.straight)}</td><td>${money(x.install)}</td></tr>`).join('');
+$('catSummary').innerHTML=CATS.map(c=>`<tr><td>${c}</td><td>${cat[c]?.qty||0}</td><td>${money(cat[c]?.rev||0)}</td></tr>`).join('');
 }
-$('parseOCR').onclick=parseOCRToRows;
-
-refreshStores();loadDay();localStorage.setItem('dmx294pro_v2',JSON.stringify(db));alert('Khôi phục thành công')}catch{alert('File JSON không hợp lệ')}};
-$('export').onclick=()=>{let csv=[['Mã NV','Họ tên','Ngành hàng','SL','Doanh thu','Thẳng','Trả góp'],...data.map(r=>[r.code,r.name,r.cat,r.qty,r.rev,r.cash,r.inst])].map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\\r\\n');download('\\ufeff'+csv,'DMX294_'+keyDate()+'.csv','text/csv;charset=utf-8')};
-function download(content,name,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
-$('ocr').onclick=async()=>{let files=[...$('images').files];if(!files.length)return alert('Chọn ít nhất một ảnh');if(!window.Tesseract)return alert('Không tải được thư viện OCR. Kiểm tra Internet rồi tải lại trang.');$('ocrStatus').textContent='Đang OCR...';let all='';try{for(let i=0;i<files.length;i++){ $('ocrStatus').textContent=`Đang đọc ảnh ${i+1}/${files.length}...`;let res=await Tesseract.recognize(files[i],'vie+eng',{logger:m=>{}});all+=`\\n--- ẢNH ${i+1} ---\\n`+res.data.text+'\\n'}$('ocrText').value=all;$('ocrStatus').textContent='OCR hoàn tất. Đọc và đối chiếu nội dung, sau đó nhập dữ liệu vào bảng.'}catch(e){$('ocrStatus').textContent='OCR lỗi: '+e.message}};
-
-function parseOCRToRows(){
- const raw=$('ocrText').value.trim(); if(!raw){alert('Chưa có nội dung OCR. Hãy đọc ảnh hoặc dán text trước.');return}
- const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
- let added=0, skipped=0;
- const skip=/^(tổng|tong|doanh thu|ngành hàng|nganh hang|số lượng|so luong|thanh toán|trả góp|báo cáo|ngày|cửa hàng|---|ocr)/i;
- for(const line of lines){
-  if(skip.test(line)){skipped++;continue}
-  const nums=(line.match(/\d[\d.,]*/g)||[]).map(x=>Number(x.replace(/[.,]/g,''))).filter(n=>Number.isFinite(n));
-  if(nums.length<1){skipped++;continue}
-  let text=line.replace(/\d[\d.,]*/g,' ').replace(/[|:;_\-]/g,' ').replace(/\s+/g,' ').trim();
-  if(text.length<2||/tổng cộng|grand total|toàn cửa hàng/i.test(text)){skipped++;continue}
-  const name=text.slice(0,90), rev=nums[nums.length-1], qty=nums.length>=2?nums[nums.length-2]:0;
-  data.push({code:'',name,cat:'Chưa phân loại',qty,rev,cash:0,inst:0});added++;
- }
- render();$('ocrStatus').textContent=`Phân tích xong: thêm ${added} dòng tạm vào bảng. ${skipped} dòng bỏ qua. Kiểm tra và sửa trước khi lưu.`;
- if(!added)alert('Chưa nhận diện được dòng phù hợp. Cần mẫu OCR rõ hơn hoặc nhập thủ công.');
+$('dataRows').addEventListener('input',e=>{
+let el=e.target;if(el.dataset.i!==undefined){
+records[+el.dataset.i][el.dataset.k]=['cat','id','name'].includes(el.dataset.k)?el.value:Number(el.value);
+drawSummariesOnly();
+}});
+$('dataRows').addEventListener('click',e=>{
+if(e.target.dataset.del!==undefined){records.splice(+e.target.dataset.del,1);draw()}
+});
+function addRecord(){
+records.push({id:$('empId').value.trim(),name:$('empName').value.trim(),cat:$('empCat').value,
+qty:+$('empQty').value||0,rev:+$('empRev').value||0,straight:+$('empStraight').value||0,install:+$('empInstall').value||0});
+draw();
 }
-$('parseOCR').onclick=parseOCRToRows;
-
-refreshStores();loadDay();
+$('addEmp').onclick=addRecord;
+$('addBlank').onclick=()=>{records.push({id:'',name:'',cat:CATS[0],qty:0,rev:0,straight:0,install:0});draw()};
+$('save').onclick=$('save2').onclick=()=>{
+localStorage.setItem(key(),JSON.stringify(records));alert('Đã lưu dữ liệu trên trình duyệt.');
+};
+$('reportDate').onchange=load;
+$('storeSelect').onchange=e=>{storeId=e.target.value;load()};
+$('addStore').onclick=()=>{
+let name=prompt('Tên cửa hàng mới:');if(!name)return;
+let id='store_'+Date.now();stores.push({id,name});
+localStorage.setItem('dmx294_stores',JSON.stringify(stores));storeId=id;renderStores();load();
+};
+$('clear').onclick=()=>{
+if(confirm('Xóa toàn bộ dữ liệu báo cáo ngày này của cửa hàng đang chọn?')){
+records=[];localStorage.removeItem(key());draw();
+}};
+$('export').onclick=()=>{
+let blob=new Blob([JSON.stringify({app:'DMX294 PRO',store:stores.find(s=>s.id===storeId),date:$('reportDate').value,records},null,2)],{type:'application/json'});
+let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`DMX294_${storeId}_${$('reportDate').value}.json`;a.click();URL.revokeObjectURL(a.href);
+};
+$('import').onchange=async e=>{
+let f=e.target.files[0];if(!f)return;
+try{let d=JSON.parse(await f.text());if(!Array.isArray(d.records))throw Error('JSON không có records');
+records=d.records;draw();alert('Đã nhập dữ liệu. Bấm Lưu dữ liệu để lưu vào cửa hàng/ngày đang chọn.');
+}catch(err){alert('Không đọc được JSON: '+err.message)}
+};
+$('runOcr').onclick=async()=>{
+let f=$('imageFile').files[0];if(!f){alert('Vui lòng chọn ảnh trước');return}
+if(!window.Tesseract){alert('Không tải được thư viện OCR. Kiểm tra kết nối mạng.');return}
+$('ocrStatus').textContent='Đang OCR ảnh, vui lòng chờ…';
+try{
+let result=await Tesseract.recognize(f,'vie+eng',{logger:m=>$('ocrStatus').textContent=m.status+(m.progress!=null?' '+Math.round(m.progress*100)+'%':'')});
+$('ocrText').value=result.data.text;
+$('ocrStatus').textContent='OCR hoàn tất. Hãy đối chiếu nội dung và nhập/chỉnh số liệu bên trên.';
+}catch(err){$('ocrStatus').textContent='OCR lỗi: '+err.message}
+};
+renderStores();load();
 </script>
-</body></html>
+</body>
+</html>
