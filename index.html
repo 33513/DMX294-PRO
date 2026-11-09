@@ -41,11 +41,12 @@ th{background:#eaf3ff}
 <label>Ngày báo cáo:</label>
 <input type="date" id="reportDate">
 <label>Cửa hàng:</label>
-<input id="store" value="ĐMX 294 Nguyễn Ảnh Thủ">
+<input id="store" value="DMX 294 Nguyễn Ảnh Thủ">
 </div>
 <div class="row">
 <input type="file" id="files" accept="image/*" multiple>
 <button id="ocrBtn">Tải ảnh & phân tích OCR</button>
+<button class="alt" onclick="parseOCRText(document.getElementById('ocrText').value)">Phân tích OCR</button>
 <button class="alt" onclick="clearOCR()">Xóa OCR</button>
 </div>
 <div id="progress">Chưa chọn hình</div>
@@ -144,15 +145,99 @@ $("ocrBtn").onclick=async()=>{
   for(let i=0;i<files.length;i++){
    $("progress").textContent="Đang đọc ảnh "+(i+1)+"/"+files.length;
    const r=await worker.recognize(files[i]);
-   result+="\\n===== ẢNH "+(i+1)+" =====\\n"+r.data.text;
+   result+="\n===== ẢNH "+(i+1)+" =====\n"+r.data.text;
   }
   await worker.terminate();
   $("ocrText").value=result;
-  $("progress").textContent="OCR hoàn tất. Vui lòng kiểm tra nội dung.";
+  $("progress").textContent="OCR hoàn tất. Nhấn Phân tích OCR.";
  }catch(e){
   $("progress").textContent="Lỗi OCR: "+e.message;
  }
 };
+
+function parseOCRText(text){
+ const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ let emp=null,pending=null,count=0;
+
+ const categories={
+ "-1":"CHƯA PHÂN LOẠI",
+ "1":"Viễn thông di động",
+ "2":"Laptop",
+ "3":"Apple",
+ "4":"Phụ kiện - Đồng hồ",
+ "5":"Điện tử",
+ "6":"Tủ lạnh, đông, mát",
+ "7":"Máy giặt, sấy",
+ "8":"Máy lạnh & Máy nước nóng",
+ "9":"Gia dụng",
+ "10":"Dịch vụ tiện ích",
+ "11":"Nhà bếp"
+ };
+
+ const extractNums=s=>(s.match(/-?\d+(?:[.,]\d+)?/g)||[])
+ .map(v=>Number(v.replace(/\./g,"").replace(",", ".")));
+
+ const add=(nums)=>{
+  if(!emp||!pending||nums.length<4)return false;
+  data.push({
+   date:$("reportDate").value,
+   store:$("store").value,
+   name:emp.name,
+   id:emp.id,
+   cat:pending,
+   qty:nums.at(-4),
+   revenue:nums.at(-3),
+   cash:nums.at(-2),
+   installment:nums.at(-1)
+  });
+  count++;
+  pending=null;
+  return true;
+ };
+
+ for(let i=0;i<lines.length;i++){
+  let s=lines[i];
+  const id=s.match(/\bid\s*:\s*(\d{4,})/i);
+
+  if(id){
+   let name="";
+   for(let j=i-1;j>=Math.max(0,i-5);j--){
+    const t=lines[j];
+    if(/id\s*:/i.test(t)||/NHÓM HÀNG|DOANH THU|ẢNH \d+/i.test(t))break;
+    if(/[A-Za-zÀ-ỹ]/.test(t)&&
+       !/^[-+]\s*\d/.test(t)&&
+       !/triệu|đồng|lưới|thẻ|tỉ trọng|doanh thu/i.test(t)){
+       name=t;
+       break;
+    }
+   }
+   emp={name:name||"NV "+id[1],id:id[1]};
+   pending=null;
+   continue;
+  }
+
+  if(!emp)continue;
+
+  const cm=s.match(/(?:^|\s)(-1|[1-9]|10|11)\s*[-–]\s*([A-Za-zÀ-ỹ])/);
+
+  if(cm){
+   pending=categories[cm[1]]||cm[2];
+   const nums=extractNums(s.slice((cm.index||0)+cm[0].length));
+   if(nums.length>=4)add(nums);
+   continue;
+  }
+
+  if(pending){
+   const nums=extractNums(s);
+   if(nums.length>=4)add(nums);
+  }
+ }
+
+ render();
+ $("progress").textContent=count?
+ `Đã thêm ${count} dòng nhóm hàng. Vui lòng đối chiếu OCR.`:
+ "Không tách được dòng số liệu. OCR hiện tại không đủ cấu trúc để tự bóc tách.";
+}
 
 function clearOCR(){
  $("ocrText").value="";
@@ -182,28 +267,34 @@ function render(){
  const current=data.filter(x=>x.date===$("reportDate").value&&x.store===$("store").value);
  const employees={};
  const categories={};
+
  current.forEach(x=>{
   if(!employees[x.id])employees[x.id]={name:x.name,id:x.id,qty:0,revenue:0,cash:0,installment:0};
   let e=employees[x.id];
   e.qty+=x.qty;e.revenue+=x.revenue;e.cash+=x.cash;e.installment+=x.installment;
+
   if(!categories[x.cat])categories[x.cat]={cat:x.cat,qty:0,revenue:0,cash:0,installment:0};
   let c=categories[x.cat];
   c.qty+=x.qty;c.revenue+=x.revenue;c.cash+=x.cash;c.installment+=x.installment;
  });
+
  $("staffCount").textContent=Object.keys(employees).length;
  $("rowCount").textContent=current.length;
  $("totalRevenue").textContent=money(current.reduce((s,x)=>s+x.revenue,0));
  $("totalPayment").textContent=money(current.reduce((s,x)=>s+x.cash+x.installment,0));
- $("dataTable").innerHTML=current.map((x,i)=>`
+
+ $("dataTable").innerHTML=current.map(x=>`
  <tr>
  <td>${esc(x.name)}</td><td>${esc(x.id)}</td><td>${esc(x.cat)}</td>
  <td>${money(x.qty)}</td><td>${money(x.revenue)}</td>
  <td>${money(x.cash)}</td><td>${money(x.installment)}</td>
  <td><button class="red" onclick="removeRow(${data.indexOf(x)})">X</button></td>
  </tr>`).join("");
+
  $("employeeTable").innerHTML=Object.values(employees).map(e=>`
  <tr><td>${esc(e.name)}</td><td>${esc(e.id)}</td><td>${money(e.qty)}</td>
  <td>${money(e.revenue)}</td><td>${money(e.cash)}</td><td>${money(e.installment)}</td></tr>`).join("");
+
  $("categoryTable").innerHTML=Object.values(categories).map(c=>`
  <tr><td>${esc(c.cat)}</td><td>${money(c.qty)}</td><td>${money(c.revenue)}</td>
  <td>${money(c.cash)}</td><td>${money(c.installment)}</td></tr>`).join("");
@@ -212,11 +303,14 @@ function render(){
 function esc(s){
  return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+
 function removeRow(i){data.splice(i,1);render()}
+
 function saveData(){
  localStorage.setItem("dmx294data",JSON.stringify(data));
  alert("Đã lưu trên trình duyệt này");
 }
+
 function exportJSON(){
  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
  const a=document.createElement("a");
@@ -224,6 +318,7 @@ function exportJSON(){
  a.download="DMX294-"+$("reportDate").value+".json";
  a.click();
 }
+
 function importJSON(){
  const f=$("importFile").files[0];
  if(!f){alert("Chọn file JSON");return}
@@ -234,9 +329,11 @@ function importJSON(){
  };
  r.readAsText(f);
 }
+
 function deleteAll(){
  if(confirm("Xóa toàn bộ dữ liệu?")){data=[];render()}
 }
+
 try{data=JSON.parse(localStorage.getItem("dmx294data")||"[]")}catch(e){data=[]}
 render();
 </script>
