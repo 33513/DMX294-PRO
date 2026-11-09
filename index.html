@@ -105,21 +105,36 @@ function refreshStores(){let s=$('store');s.innerHTML=Object.keys(db.stores).map
 $('store').onchange=()=>{db.active=storeName();localStorage.setItem('dmx294pro_v2',JSON.stringify(db));loadDay()};
 $('addStore').onclick=()=>{let n=prompt('Tên cửa hàng mới:');if(n&&n.trim()){n=n.trim();if(db.stores[n])return alert('Cửa hàng đã tồn tại');db.stores[n]={};db.active=n;
 function parseOCRToRows(){
- const raw=$('ocrText').value.trim(); if(!raw){alert('Chưa có nội dung OCR. Hãy đọc ảnh hoặc dán text trước.');return}
- const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
- let added=0, skipped=0;
- const skip=/^(tổng|tong|doanh thu|ngành hàng|nganh hang|số lượng|so luong|thanh toán|trả góp|báo cáo|ngày|cửa hàng|---|ocr)/i;
+ const raw=$('ocrText').value.trim();
+ if(!raw){alert('Chưa có OCR.');return}
+ // Strictly avoid treating date/header/summary lines as employees.
+ const lines=raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ const dateRe=/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}\b|\b20\d{2}\b/;
+ const headerRe=/doanh thu|ngành hàng|nganh hang|báo cáo|bao cao|cửa hàng|chi tiết|chi tiet|thống kê|thong ke|tổng|tong|thanh toán|trả góp|số lượng|so luong|nhóm hàng|nhom hang/i;
+ const categoryRe=/điện thoại|dien thoai|apple|mobile|laptop|phụ kiện|phu kien|điện máy|dien may|tủ lạnh|tu lanh|máy giặt|may giat|điều hòa|dieu hoa|gia dụng|gia dung|dịch vụ|dich vu|ngành hàng|nganh hang/i;
+ const moneyTokens=s=>{const m=s.match(/\b\d{1,3}(?:[.,]\d{3})+(?:[.,]\d+)?\b|\b\d{5,}\b/g)||[];return m.map(v=>Number(v.replace(/[.,]/g,''))).filter(Number.isFinite)};
+ const cleanName=s=>s.replace(/[\d.,:;|()[\]{}]+/g,' ').replace(/\s+/g,' ').trim();
+ let candidates=[],excluded=0;
  for(const line of lines){
-  if(skip.test(line)){skipped++;continue}
-  const nums=(line.match(/\d[\d.,]*/g)||[]).map(x=>Number(x.replace(/[.,]/g,''))).filter(n=>Number.isFinite(n));
-  if(nums.length<1){skipped++;continue}
-  let text=line.replace(/\d[\d.,]*/g,' ').replace(/[|:;_\-]/g,' ').replace(/\s+/g,' ').trim();
-  if(text.length<2||/tổng cộng|grand total|toàn cửa hàng/i.test(text)){skipped++;continue}
-  const name=text.slice(0,90), rev=nums[nums.length-1], qty=nums.length>=2?nums[nums.length-2]:0;
-  data.push({code:'',name,cat:'Chưa phân loại',qty,rev,cash:0,inst:0});added++;
+  if(headerRe.test(line)||dateRe.test(line)||categoryRe.test(line)){excluded++;continue}
+  const nums=moneyTokens(line);
+  if(!nums.length){excluded++;continue}
+  // Only candidate when text begins with a plausible personal name (at least 2 words, no report keywords).
+  const text=cleanName(line);
+  const words=text.split(/\s+/).filter(Boolean);
+  if(words.length<2||words.length>7||/^[A-Z]{2,}\s/.test(text)){excluded++;continue}
+  // Do not infer revenue from arbitrary OCR lines: put amount in review field as tentative.
+  candidates.push({code:'',name:text,cat:'CẦN XÁC NHẬN',qty:0,rev:nums[nums.length-1],cash:0,inst:0});
  }
- render();$('ocrStatus').textContent=`Phân tích xong: thêm ${added} dòng tạm vào bảng. ${skipped} dòng bỏ qua. Kiểm tra và sửa trước khi lưu.`;
- if(!added)alert('Chưa nhận diện được dòng phù hợp. Cần mẫu OCR rõ hơn hoặc nhập thủ công.');
+ if(!candidates.length){
+  $('ocrStatus').textContent='Không đủ điều kiện nhận diện nhân viên tự động. Không tạo dữ liệu để tránh sai doanh thu.';
+  alert('Không nhận diện chắc chắn được nhân viên. Vui lòng dùng báo cáo gốc rõ hơn hoặc nhập dữ liệu có cấu trúc.');
+  return;
+ }
+ const ok=confirm(`Tìm thấy ${candidates.length} dòng nghi là nhân viên. Doanh thu đang là số tạm đoán, ngành hàng chưa xác định. Thêm vào bảng để bạn rà soát?`);
+ if(!ok)return;
+ data.push(...candidates);render();
+ $('ocrStatus').textContent=`Đã thêm ${candidates.length} dòng DỰ THẢO (chưa xác minh). ${excluded} dòng đã loại. Không dùng làm KPI chính thức.`;
 }
 $('parseOCR').onclick=parseOCRToRows;
 
