@@ -46,7 +46,8 @@ table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}th,td{p
 <div class="drop"><p><b>Chọn ảnh báo cáo doanh thu</b></p><input type="file" id="images" accept="image/*" multiple><p class="note">OCR chạy ngay trên trình duyệt bằng Tesseract.js. Ảnh không tải lên máy chủ.</p><button id="ocr">Đọc chữ từ ảnh</button></div>
 <div id="ocrStatus" class="note" style="margin-top:8px"></div>
 <textarea id="ocrText" rows="7" style="width:100%;margin-top:10px" placeholder="Nội dung OCR sẽ xuất hiện ở đây. Có thể dán text báo cáo vào..."></textarea>
-<p class="note">OCR chỉ trích xuất chữ; chưa thể đảm bảo tự phân cột chính xác từ mọi mẫu ảnh. Vui lòng nhập/đối chiếu vào bảng bên dưới.</p>
+<div class="actions"><button id="parseOCR" class="green">Phân tích OCR & tạo bảng</button></div>
+<p class="note">Bộ phân tích thử nhận dạng dòng có số liệu. Hãy kiểm tra bảng trước khi lưu vì OCR có thể nhầm số hoặc cột.</p>
 </section>
 <section class="panel">
 <h2>2. Thêm dòng dữ liệu</h2>
@@ -102,12 +103,72 @@ $('dedupe').onclick=()=>{let m=new Map();data.forEach(r=>{let k=[r.code||r.name,
 $('reportDate').value=new Date().toISOString().slice(0,10);$('reportDate').onchange=loadDay;
 function refreshStores(){let s=$('store');s.innerHTML=Object.keys(db.stores).map(n=>`<option ${n===db.active?'selected':''}>${esc(n)}</option>`).join('');}
 $('store').onchange=()=>{db.active=storeName();localStorage.setItem('dmx294pro_v2',JSON.stringify(db));loadDay()};
-$('addStore').onclick=()=>{let n=prompt('Tên cửa hàng mới:');if(n&&n.trim()){n=n.trim();if(db.stores[n])return alert('Cửa hàng đã tồn tại');db.stores[n]={};db.active=n;refreshStores();loadDay();localStorage.setItem('dmx294pro_v2',JSON.stringify(db))}};
+$('addStore').onclick=()=>{let n=prompt('Tên cửa hàng mới:');if(n&&n.trim()){n=n.trim();if(db.stores[n])return alert('Cửa hàng đã tồn tại');db.stores[n]={};db.active=n;
+function parseOCRToRows(){
+ const raw=$('ocrText').value.trim(); if(!raw){alert('Chưa có nội dung OCR. Hãy đọc ảnh hoặc dán text trước.');return}
+ const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ let added=0, skipped=0;
+ const skip=/^(tổng|tong|doanh thu|ngành hàng|nganh hang|số lượng|so luong|thanh toán|trả góp|báo cáo|ngày|cửa hàng|---|ocr)/i;
+ for(const line of lines){
+  if(skip.test(line)){skipped++;continue}
+  const nums=(line.match(/\d[\d.,]*/g)||[]).map(x=>Number(x.replace(/[.,]/g,''))).filter(n=>Number.isFinite(n));
+  if(nums.length<1){skipped++;continue}
+  let text=line.replace(/\d[\d.,]*/g,' ').replace(/[|:;_\-]/g,' ').replace(/\s+/g,' ').trim();
+  if(text.length<2||/tổng cộng|grand total|toàn cửa hàng/i.test(text)){skipped++;continue}
+  const name=text.slice(0,90), rev=nums[nums.length-1], qty=nums.length>=2?nums[nums.length-2]:0;
+  data.push({code:'',name,cat:'Chưa phân loại',qty,rev,cash:0,inst:0});added++;
+ }
+ render();$('ocrStatus').textContent=`Phân tích xong: thêm ${added} dòng tạm vào bảng. ${skipped} dòng bỏ qua. Kiểm tra và sửa trước khi lưu.`;
+ if(!added)alert('Chưa nhận diện được dòng phù hợp. Cần mẫu OCR rõ hơn hoặc nhập thủ công.');
+}
+$('parseOCR').onclick=parseOCRToRows;
+
+refreshStores();loadDay();localStorage.setItem('dmx294pro_v2',JSON.stringify(db))}};
 $('backup').onclick=()=>download(JSON.stringify(db,null,2),'DMX294_backup.json','application/json');
-$('restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.stores)throw Error();db=x;refreshStores();loadDay();localStorage.setItem('dmx294pro_v2',JSON.stringify(db));alert('Khôi phục thành công')}catch{alert('File JSON không hợp lệ')}};
+$('restore').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!x.stores)throw Error();db=x;
+function parseOCRToRows(){
+ const raw=$('ocrText').value.trim(); if(!raw){alert('Chưa có nội dung OCR. Hãy đọc ảnh hoặc dán text trước.');return}
+ const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ let added=0, skipped=0;
+ const skip=/^(tổng|tong|doanh thu|ngành hàng|nganh hang|số lượng|so luong|thanh toán|trả góp|báo cáo|ngày|cửa hàng|---|ocr)/i;
+ for(const line of lines){
+  if(skip.test(line)){skipped++;continue}
+  const nums=(line.match(/\d[\d.,]*/g)||[]).map(x=>Number(x.replace(/[.,]/g,''))).filter(n=>Number.isFinite(n));
+  if(nums.length<1){skipped++;continue}
+  let text=line.replace(/\d[\d.,]*/g,' ').replace(/[|:;_\-]/g,' ').replace(/\s+/g,' ').trim();
+  if(text.length<2||/tổng cộng|grand total|toàn cửa hàng/i.test(text)){skipped++;continue}
+  const name=text.slice(0,90), rev=nums[nums.length-1], qty=nums.length>=2?nums[nums.length-2]:0;
+  data.push({code:'',name,cat:'Chưa phân loại',qty,rev,cash:0,inst:0});added++;
+ }
+ render();$('ocrStatus').textContent=`Phân tích xong: thêm ${added} dòng tạm vào bảng. ${skipped} dòng bỏ qua. Kiểm tra và sửa trước khi lưu.`;
+ if(!added)alert('Chưa nhận diện được dòng phù hợp. Cần mẫu OCR rõ hơn hoặc nhập thủ công.');
+}
+$('parseOCR').onclick=parseOCRToRows;
+
+refreshStores();loadDay();localStorage.setItem('dmx294pro_v2',JSON.stringify(db));alert('Khôi phục thành công')}catch{alert('File JSON không hợp lệ')}};
 $('export').onclick=()=>{let csv=[['Mã NV','Họ tên','Ngành hàng','SL','Doanh thu','Thẳng','Trả góp'],...data.map(r=>[r.code,r.name,r.cat,r.qty,r.rev,r.cash,r.inst])].map(a=>a.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\\r\\n');download('\\ufeff'+csv,'DMX294_'+keyDate()+'.csv','text/csv;charset=utf-8')};
 function download(content,name,type){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
 $('ocr').onclick=async()=>{let files=[...$('images').files];if(!files.length)return alert('Chọn ít nhất một ảnh');if(!window.Tesseract)return alert('Không tải được thư viện OCR. Kiểm tra Internet rồi tải lại trang.');$('ocrStatus').textContent='Đang OCR...';let all='';try{for(let i=0;i<files.length;i++){ $('ocrStatus').textContent=`Đang đọc ảnh ${i+1}/${files.length}...`;let res=await Tesseract.recognize(files[i],'vie+eng',{logger:m=>{}});all+=`\\n--- ẢNH ${i+1} ---\\n`+res.data.text+'\\n'}$('ocrText').value=all;$('ocrStatus').textContent='OCR hoàn tất. Đọc và đối chiếu nội dung, sau đó nhập dữ liệu vào bảng.'}catch(e){$('ocrStatus').textContent='OCR lỗi: '+e.message}};
+
+function parseOCRToRows(){
+ const raw=$('ocrText').value.trim(); if(!raw){alert('Chưa có nội dung OCR. Hãy đọc ảnh hoặc dán text trước.');return}
+ const lines=raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ let added=0, skipped=0;
+ const skip=/^(tổng|tong|doanh thu|ngành hàng|nganh hang|số lượng|so luong|thanh toán|trả góp|báo cáo|ngày|cửa hàng|---|ocr)/i;
+ for(const line of lines){
+  if(skip.test(line)){skipped++;continue}
+  const nums=(line.match(/\d[\d.,]*/g)||[]).map(x=>Number(x.replace(/[.,]/g,''))).filter(n=>Number.isFinite(n));
+  if(nums.length<1){skipped++;continue}
+  let text=line.replace(/\d[\d.,]*/g,' ').replace(/[|:;_\-]/g,' ').replace(/\s+/g,' ').trim();
+  if(text.length<2||/tổng cộng|grand total|toàn cửa hàng/i.test(text)){skipped++;continue}
+  const name=text.slice(0,90), rev=nums[nums.length-1], qty=nums.length>=2?nums[nums.length-2]:0;
+  data.push({code:'',name,cat:'Chưa phân loại',qty,rev,cash:0,inst:0});added++;
+ }
+ render();$('ocrStatus').textContent=`Phân tích xong: thêm ${added} dòng tạm vào bảng. ${skipped} dòng bỏ qua. Kiểm tra và sửa trước khi lưu.`;
+ if(!added)alert('Chưa nhận diện được dòng phù hợp. Cần mẫu OCR rõ hơn hoặc nhập thủ công.');
+}
+$('parseOCR').onclick=parseOCRToRows;
+
 refreshStores();loadDay();
 </script>
 </body></html>
