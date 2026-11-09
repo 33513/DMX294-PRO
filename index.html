@@ -1,203 +1,487 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DMX 294 PRO</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
 <style>
-:root{--blue:#0876d1;--bg:#eef4fa;--line:#d5e1ee;--text:#17324c}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);font:14px Arial;color:var(--text)}
-header{background:linear-gradient(90deg,#075ca8,#087bd8);color:white;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-header strong{font-size:20px}
-main{max-width:1400px;margin:18px auto;padding:0 14px}
-.toolbar,.panel,.kpi{background:white;border:1px solid var(--line);border-radius:9px;padding:14px;margin-bottom:12px}
-.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
-button{border:0;background:var(--blue);color:white;padding:9px 13px;border-radius:6px;cursor:pointer;font-weight:600}
-button.secondary{background:#e8f2fc;color:#075ca8;border:1px solid #c8dff5}
-button.danger{background:#dc3545}
-input,select,textarea{padding:9px;border:1px solid #c8d7e6;border-radius:5px;background:white;color:#17324c;max-width:100%}
-input[type=file]{padding:5px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.kpi small{color:#6a8299}.kpi b{display:block;font-size:22px;margin-top:8px}
-.tablewrap{overflow:auto;max-height:460px;border:1px solid var(--line);border-radius:6px}
-table{width:100%;border-collapse:collapse;min-width:800px}
-th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left}
-th{background:#eaf3fb;position:sticky;top:0}
-td input{width:100%;min-width:70px;padding:6px}
-.sectiontitle{font-weight:bold;margin-bottom:10px}
-.hint{font-size:12px;color:#637c94;line-height:1.5}
-.tag{background:#eaf4ff;color:#075ca8;border-radius:20px;padding:4px 9px;font-size:12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.wide{width:100%}
-@media(max-width:850px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}main{padding:0 8px}header{padding:12px}}
+body{margin:0;background:#edf3fb;font-family:Arial,sans-serif;color:#123}
+header{background:#0875ce;color:#fff;padding:14px 20px}
+header h2{margin:0;font-size:22px}
+header small{font-size:12px}
+main{max-width:1200px;margin:16px auto;padding:0 10px}
+.card{background:#fff;border:1px solid #cbdcf1;border-radius:8px;padding:12px;margin-bottom:12px}
+h3{font-size:15px;margin:0 0 12px}
+button{border:0;border-radius:5px;padding:9px 13px;cursor:pointer;background:#0875ce;color:white;font-weight:bold}
+button.secondary{background:#e8f2ff;color:#075eaf;border:1px solid #bdd7f7}
+button.danger{background:#dc3545;color:white}
+input,select,textarea{border:1px solid #c4d6ed;border-radius:5px;padding:9px;font-size:13px;background:white}
+input,select{max-width:100%}
+textarea{width:100%;min-height:160px;resize:vertical}
+.flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:14px;border:1px solid #cbdcf1;border-radius:8px;background:white}
+.stat small{display:block;color:#6480a5;margin-bottom:8px}
+.stat b{font-size:20px;word-break:break-word}
+.note{font-size:12px;color:#6b83a2;line-height:1.5}
+.scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid #d2e0f2;padding:8px;text-align:left}
+th{background:#eaf2fb}
+td input,td select{width:100%;min-width:75px}
+.progress{height:8px;background:#e7eef8;border-radius:8px;overflow:hidden;margin:8px 0}
+.progress div{height:100%;width:0;background:#0875ce}
+@media(max-width:800px){
+.grid4{grid-template-columns:repeat(2,1fr)}
+.grid2{grid-template-columns:1fr}
+}
 </style>
 </head>
+
 <body>
 <header>
-<div><strong>DMX 294 PRO</strong><div style="font-size:12px;margin-top:4px">Quản lý doanh thu · OCR · đa cửa hàng</div></div>
-<div class="row"><label>Cửa hàng <select id="storeSelect"></select></label><button id="addStore">+ Thêm cửa hàng</button></div>
+<h2>DMX 294 PRO</h2>
+<small>Quản lý doanh thu · OCR · đa cửa hàng</small>
 </header>
+
 <main>
-<div class="toolbar">
-<label>Ngày báo cáo <input type="date" id="reportDate"></label>
-<button id="save">Lưu dữ liệu</button>
-<button class="secondary" id="export">Xuất JSON</button>
-<label class="secondary" style="padding:8px;border-radius:6px">Nhập JSON <input type="file" id="import" accept=".json,application/json" style="width:150px"></label>
-<button class="danger" id="clear">Xóa báo cáo ngày</button>
+
+<div class="card flex">
+<label>Cửa hàng</label>
+<select id="store"></select>
+<input id="newStore" placeholder="Tên cửa hàng mới">
+<button onclick="addStore()">+ Thêm cửa hàng</button>
 </div>
 
-<div class="kpis">
-<div class="kpi"><small>Tổng doanh thu</small><b id="sumRev">0 đ</b></div>
-<div class="kpi"><small>Số lượng</small><b id="sumQty">0</b></div>
-<div class="kpi"><small>Nhân viên có doanh thu</small><b id="activeStaff">0</b></div>
-<div class="kpi"><small>Nhân viên trong danh sách</small><b id="staffCount">0</b></div>
+<div class="card flex">
+<label>Ngày báo cáo</label>
+<input type="date" id="date">
+<button onclick="saveData()">Lưu dữ liệu</button>
+<button class="secondary" onclick="exportJSON()">Xuất JSON</button>
+<label>Nhập JSON</label>
+<input type="file" id="jsonFile" accept=".json">
+<button class="secondary" onclick="importJSON()">Nhập</button>
+<button class="danger" onclick="deleteDay()">Xóa báo cáo ngày</button>
 </div>
 
-<div class="grid">
-<section class="panel">
-<div class="sectiontitle">1. Nhập báo cáo / OCR</div>
-<div class="row"><input type="file" id="imageFile" accept="image/*"><button id="runOcr">Đọc ảnh bằng OCR</button></div>
-<p class="hint">OCR chạy trên trình duyệt. Kết quả cần đối chiếu và nhập/chỉnh số liệu ở bảng bên dưới trước khi lưu.</p>
-<textarea id="ocrText" class="wide" rows="8" placeholder="Văn bản OCR sẽ xuất hiện tại đây..."></textarea>
-<div id="ocrStatus" class="hint"></div>
-</section>
-
-<section class="panel">
-<div class="sectiontitle">2. Thêm / cập nhật nhân viên</div>
-<div class="row"><input id="empId" placeholder="Mã nhân viên"><input id="empName" placeholder="Họ tên nhân viên" style="flex:1;min-width:180px"></div>
-<div class="row" style="margin-top:8px">
-<input id="empQty" type="number" min="0" placeholder="Số lượng">
-<input id="empRev" type="number" min="0" placeholder="Doanh thu (đ)">
-<input id="empStraight" type="number" min="0" placeholder="Trả thẳng (đ)">
-<input id="empInstall" type="number" min="0" placeholder="Trả góp (đ)">
-</div>
-<div class="row" style="margin-top:8px"><select id="empCat"></select><button id="addEmp">+ Thêm dòng</button></div>
-<p class="hint">Mỗi dòng là một nhân viên + ngành hàng. Nhân viên nhiều ngành có thể thêm nhiều dòng cùng mã.</p>
-</section>
+<div class="grid4">
+<div class="stat"><small>Tổng doanh thu</small><b id="sumRev">0 đ</b></div>
+<div class="stat"><small>Số lượng</small><b id="sumQty">0</b></div>
+<div class="stat"><small>Nhân viên có doanh thu</small><b id="activeStaff">0</b></div>
+<div class="stat"><small>Nhân viên trong danh sách</small><b id="staffCount">0</b></div>
 </div>
 
-<section class="panel">
-<div class="sectiontitle">3. Kiểm tra & chỉnh sửa dữ liệu <span class="tag">Có thể sửa trực tiếp</span></div>
-<div class="tablewrap"><table>
-<thead><tr><th>Mã NV</th><th>Họ tên</th><th>Ngành hàng</th><th>Số lượng</th><th>Doanh thu (đ)</th><th>Trả thẳng (đ)</th><th>Trả góp (đ)</th><th></th></tr></thead>
-<tbody id="dataRows"></tbody></table></div>
-<div class="row" style="margin-top:10px"><button class="secondary" id="addBlank">+ Dòng trống</button><button id="save2">Lưu và tính lại</button></div>
-</section>
+<div class="grid2">
 
-<div class="grid">
-<section class="panel"><div class="sectiontitle">4. Tổng hợp nhân viên</div>
-<div class="tablewrap"><table style="min-width:550px"><thead><tr><th>Mã NV</th><th>Nhân viên</th><th>Số lượng</th><th>Doanh thu</th><th>Trả thẳng</th><th>Trả góp</th></tr></thead><tbody id="staffSummary"></tbody></table></div></section>
-<section class="panel"><div class="sectiontitle">5. Tổng hợp ngành hàng</div>
-<div class="tablewrap"><table style="min-width:450px"><thead><tr><th>Ngành hàng</th><th>Số lượng</th><th>Doanh thu</th></tr></thead><tbody id="catSummary"></tbody></table></div></section>
+<div class="card">
+<h3>1. Nhập báo cáo / OCR</h3>
+<div class="flex">
+<input type="file" id="ocrFile" accept="image/*" multiple>
+<button id="ocrBtn" onclick="readOCR()">Đọc ảnh bằng OCR</button>
+<button class="secondary" onclick="clearOCR()">Xóa OCR</button>
 </div>
-<p class="hint">Dữ liệu lưu trên trình duyệt hiện tại (localStorage), phân tách theo cửa hàng và ngày. Xuất JSON để sao lưu/chuyển máy. Chưa đồng bộ nhiều người dùng qua mạng.</p>
+
+<p class="note" id="ocrStatus">Có thể chọn nhiều ảnh báo cáo cùng lúc.</p>
+<div class="progress"><div id="ocrProgress"></div></div>
+<textarea id="ocrText" placeholder="Văn bản OCR sẽ xuất hiện tại đây..."></textarea>
+
+<div class="flex" style="margin-top:8px">
+<button class="secondary" onclick="copyOCR()">Sao chép OCR</button>
+</div>
+</div>
+
+<div class="card">
+<h3>2. Thêm / cập nhật nhân viên</h3>
+
+<div class="flex">
+<input id="empCode" placeholder="Mã nhân viên">
+<input id="empName" placeholder="Họ tên nhân viên" style="flex:1">
+</div>
+
+<div class="flex" style="margin-top:8px">
+<input id="qty" type="number" min="0" placeholder="Số lượng">
+<input id="rev" type="number" min="0" placeholder="Doanh thu (đ)">
+<input id="straight" type="number" min="0" placeholder="Trả thẳng (đ)">
+<input id="install" type="number" min="0" placeholder="Trả góp (đ)">
+</div>
+
+<div class="flex" style="margin-top:8px">
+<select id="category"></select>
+<button onclick="addRow()">+ Thêm dòng</button>
+<button class="secondary" onclick="clearForm()">Làm mới</button>
+</div>
+
+<p class="note">
+Mỗi dòng là một nhân viên + ngành hàng.
+Nhân viên nhiều ngành hàng có thể thêm nhiều dòng cùng mã.
+</p>
+</div>
+</div>
+
+<div class="card">
+<h3>3. Kiểm tra & chỉnh sửa dữ liệu</h3>
+<div class="scroll">
+<table>
+<thead>
+<tr>
+<th>Mã NV</th><th>Họ tên</th><th>Ngành hàng</th>
+<th>Số lượng</th><th>Doanh thu (đ)</th>
+<th>Trả thẳng (đ)</th><th>Trả góp (đ)</th><th></th>
+</tr>
+</thead>
+<tbody id="dataBody"></tbody>
+</table>
+</div>
+<div class="flex" style="margin-top:8px">
+<button class="secondary" onclick="addRow()">+ Dòng trống</button>
+<button onclick="saveData()">Lưu và tính lại</button>
+</div>
+</div>
+
+<div class="grid2">
+<div class="card">
+<h3>4. Tổng hợp nhân viên</h3>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>Mã NV</th><th>Nhân viên</th><th>Số lượng</th><th>Doanh thu</th><th>Trả thẳng</th><th>Trả góp</th></tr>
+</thead>
+<tbody id="staffBody"></tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h3>5. Tổng hợp ngành hàng</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>Ngành hàng</th><th>Số lượng</th><th>Doanh thu</th></tr></thead>
+<tbody id="catBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<p class="note">
+Dữ liệu lưu trên trình duyệt hiện tại (localStorage), phân tách theo cửa hàng và ngày.
+Xuất JSON để sao lưu/chuyển máy. Chưa đồng bộ nhiều người dùng qua mạng.
+</p>
+
 </main>
 
 <script>
-const CATS=[
-'-1 - CHƯA PHÂN LOẠI','1 - Viễn thông di động','2 - Laptop','3 - Apple',
-'4 - Phụ kiện - Đồng hồ','5 - Điện tử','6 - Tủ lạnh, đông, mát',
-'7 - Máy giặt, sấy','8 - Máy lạnh & Máy nước nóng','9 - Gia dụng',
-'10 - Dịch vụ tiện ích','11 - NH Tận Tâm'
-];
-const $=id=>document.getElementById(id);
-let stores=JSON.parse(localStorage.getItem('dmx294_stores')||'null')||[{id:'dmx294',name:'DMX 294 Nguyễn Ảnh Thủ'}];
-let storeId=stores[0].id,records=[];
-$('empCat').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
-$('reportDate').value=new Date().toISOString().slice(0,10);
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const CATS = {
+"-1":"Chưa phân loại",
+"1":"Viễn thông di động",
+"2":"Laptop",
+"3":"Apple",
+"4":"Phụ kiện - Đồng hồ",
+"5":"Điện tử",
+"6":"Tủ lạnh, đông, mát",
+"7":"Máy giặt, sấy",
+"8":"Máy lạnh & Máy nước nóng",
+"9":"Gia dụng",
+"10":"Dịch vụ tiện ích",
+"11":"NH Tận Tâm"
+};
+
+let records = [];
+let stores = loadStores();
+let isOCRRunning = false;
+
+function loadStores(){
+ try{
+  const a=JSON.parse(localStorage.getItem("dmx294_stores")||"[]");
+  return Array.isArray(a)&&a.length?a:["ĐMX 294 Nguyễn Ảnh Thủ"];
+ }catch(e){
+  return ["ĐMX 294 Nguyễn Ảnh Thủ"];
+ }
+}
+
+function todayLocal(){
+ const d=new Date();
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function money(n){
+ return Number(n||0).toLocaleString("vi-VN")+" đ";
+}
+
+function key(){
+ return "dmx294_data_"+encodeURIComponent($("store").value)+"_"+$("date").value;
+}
+
+function init(){
+ $("date").value=todayLocal();
+
+ $("category").innerHTML=Object.entries(CATS)
+ .map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+
+ renderStores();
+ loadData();
+}
 
 function renderStores(){
-$('storeSelect').innerHTML=stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
-$('storeSelect').value=storeId;
+ $("store").innerHTML=stores.map(s=>
+ `<option value="${esc(s)}">${esc(s)}</option>`
+ ).join("");
 }
-function key(){return `dmx294_data_${storeId}_${$('reportDate').value}`}
-function load(){records=JSON.parse(localStorage.getItem(key())||'[]');draw()}
-function money(n){return (Number(n)||0).toLocaleString('vi-VN')+' đ'}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-function draw(){
-$('dataRows').innerHTML=records.map((r,i)=>`<tr>
-<td><input value="${esc(r.id)}" data-i="${i}" data-k="id"></td>
-<td><input value="${esc(r.name)}" data-i="${i}" data-k="name"></td>
-<td><select data-i="${i}" data-k="cat">${CATS.map(c=>`<option ${c===r.cat?'selected':''}>${c}</option>`).join('')}</select></td>
-<td><input type="number" value="${r.qty||0}" data-i="${i}" data-k="qty"></td>
-<td><input type="number" value="${r.rev||0}" data-i="${i}" data-k="rev"></td>
-<td><input type="number" value="${r.straight||0}" data-i="${i}" data-k="straight"></td>
-<td><input type="number" value="${r.install||0}" data-i="${i}" data-k="install"></td>
-<td><button class="danger" data-del="${i}">×</button></td></tr>`).join('');
-drawSummariesOnly();
+function addStore(){
+ const s=$("newStore").value.trim();
+ if(!s)return alert("Nhập tên cửa hàng!");
+ if(stores.includes(s))return alert("Cửa hàng đã tồn tại!");
+
+ stores.push(s);
+ localStorage.setItem("dmx294_stores",JSON.stringify(stores));
+ renderStores();
+ $("store").value=s;
+ $("newStore").value="";
+ loadData();
 }
-function drawSummariesOnly(){
-let staff={},cat={};
-records.forEach(r=>{
-let id=r.id||r.name||'unknown';
-staff[id]??={id,name:r.name,qty:0,rev:0,straight:0,install:0};
-['qty','rev','straight','install'].forEach(k=>staff[id][k]+=Number(r[k])||0);
-cat[r.cat]??={qty:0,rev:0};
-cat[r.cat].qty+=Number(r.qty)||0;cat[r.cat].rev+=Number(r.rev)||0;
-});
-let ss=Object.values(staff);
-$('sumRev').textContent=money(records.reduce((a,r)=>a+(+r.rev||0),0);
-$('sumQty').textContent=records.reduce((a,r)=>a+(+r.qty||0),0).toLocaleString('vi-VN');
-$('activeStaff').textContent=ss.filter(x=>x.rev>0).length;
-$('staffCount').textContent=ss.length;
-$('staffSummary').innerHTML=ss.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.name)}</td><td>${x.qty}</td><td>${money(x.rev)}</td><td>${money(x.straight)}</td><td>${money(x.install)}</td></tr>`).join('');
-$('catSummary').innerHTML=CATS.map(c=>`<tr><td>${c}</td><td>${cat[c]?.qty||0}</td><td>${money(cat[c]?.rev||0)}</td></tr>`).join('');
+
+function loadData(){
+ try{
+  records=JSON.parse(localStorage.getItem(key())||"[]");
+  if(!Array.isArray(records))records=[];
+ }catch(e){
+  records=[];
+ }
+ render();
 }
-$('dataRows').addEventListener('input',e=>{
-let el=e.target;if(el.dataset.i!==undefined){
-records[+el.dataset.i][el.dataset.k]=['cat','id','name'].includes(el.dataset.k)?el.value:Number(el.value);
-drawSummariesOnly();
-}});
-$('dataRows').addEventListener('click',e=>{
-if(e.target.dataset.del!==undefined){records.splice(+e.target.dataset.del,1);draw()}
-});
-function addRecord(){
-records.push({id:$('empId').value.trim(),name:$('empName').value.trim(),cat:$('empCat').value,
-qty:+$('empQty').value||0,rev:+$('empRev').value||0,straight:+$('empStraight').value||0,install:+$('empInstall').value||0});
-draw();
+
+function saveData(){
+ localStorage.setItem(key(),JSON.stringify(records));
+ render();
+ alert("Đã lưu dữ liệu!");
 }
-$('addEmp').onclick=addRecord;
-$('addBlank').onclick=()=>{records.push({id:'',name:'',cat:CATS[0],qty:0,rev:0,straight:0,install:0});draw()};
-$('save').onclick=$('save2').onclick=()=>{
-localStorage.setItem(key(),JSON.stringify(records));alert('Đã lưu dữ liệu trên trình duyệt.');
-};
-$('reportDate').onchange=load;
-$('storeSelect').onchange=e=>{storeId=e.target.value;load()};
-$('addStore').onclick=()=>{
-let name=prompt('Tên cửa hàng mới:');if(!name)return;
-let id='store_'+Date.now();stores.push({id,name});
-localStorage.setItem('dmx294_stores',JSON.stringify(stores));storeId=id;renderStores();load();
-};
-$('clear').onclick=()=>{
-if(confirm('Xóa toàn bộ dữ liệu báo cáo ngày này của cửa hàng đang chọn?')){
-records=[];localStorage.removeItem(key());draw();
-}};
-$('export').onclick=()=>{
-let blob=new Blob([JSON.stringify({app:'DMX294 PRO',store:stores.find(s=>s.id===storeId),date:$('reportDate').value,records},null,2)],{type:'application/json'});
-let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`DMX294_${storeId}_${$('reportDate').value}.json`;a.click();URL.revokeObjectURL(a.href);
-};
-$('import').onchange=async e=>{
-let f=e.target.files[0];if(!f)return;
-try{let d=JSON.parse(await f.text());if(!Array.isArray(d.records))throw Error('JSON không có records');
-records=d.records;draw();alert('Đã nhập dữ liệu. Bấm Lưu dữ liệu để lưu vào cửa hàng/ngày đang chọn.');
-}catch(err){alert('Không đọc được JSON: '+err.message)}
-};
-$('runOcr').onclick=async()=>{
-let f=$('imageFile').files[0];if(!f){alert('Vui lòng chọn ảnh trước');return}
-if(!window.Tesseract){alert('Không tải được thư viện OCR. Kiểm tra kết nối mạng.');return}
-$('ocrStatus').textContent='Đang OCR ảnh, vui lòng chờ…';
-try{
-let result=await Tesseract.recognize(f,'vie+eng',{logger:m=>$('ocrStatus').textContent=m.status+(m.progress!=null?' '+Math.round(m.progress*100)+'%':'')});
-$('ocrText').value=result.data.text;
-$('ocrStatus').textContent='OCR hoàn tất. Hãy đối chiếu nội dung và nhập/chỉnh số liệu bên trên.';
-}catch(err){$('ocrStatus').textContent='OCR lỗi: '+err.message}
-};
-renderStores();load();
+
+function deleteDay(){
+ if(!confirm("Xóa toàn bộ báo cáo ngày này?"))return;
+ records=[];
+ localStorage.removeItem(key());
+ render();
+}
+
+function clearForm(){
+ ["empCode","empName","qty","rev","straight","install"].forEach(id=>$(id).value="");
+ $("category").value="-1";
+}
+
+function addRow(){
+ records.push({
+ code:$("empCode").value.trim(),
+ name:$("empName").value.trim(),
+ cat:$("category").value,
+ qty:Number($("qty").value||0),
+ rev:Number($("rev").value||0),
+ straight:Number($("straight").value||0),
+ install:Number($("install").value||0)
+ });
+ clearForm();
+ render();
+}
+
+function edit(i,field,value){
+ records[i][field]=
+ ["code","name","cat"].includes(field)?value:Number(value||0);
+ renderSummaries();
+}
+
+function delRow(i){
+ records.splice(i,1);
+ render();
+}
+
+function render(){
+ $("dataBody").innerHTML=records.map((r,i)=>`
+ <tr>
+ <td><input value="${esc(r.code)}" onchange="edit(${i},'code',this.value)"></td>
+ <td><input value="${esc(r.name)}" onchange="edit(${i},'name',this.value)"></td>
+ <td><select onchange="edit(${i},'cat',this.value)">
+ ${Object.entries(CATS).map(([k,v])=>
+ `<option value="${k}" ${r.cat==k?'selected':''}>${v}</option>`
+ ).join("")}
+ </select></td>
+ <td><input type="number" value="${r.qty||0}" onchange="edit(${i},'qty',this.value)"></td>
+ <td><input type="number" value="${r.rev||0}" onchange="edit(${i},'rev',this.value)"></td>
+ <td><input type="number" value="${r.straight||0}" onchange="edit(${i},'straight',this.value)"></td>
+ <td><input type="number" value="${r.install||0}" onchange="edit(${i},'install',this.value)"></td>
+ <td><button class="danger" onclick="delRow(${i})">X</button></td>
+ </tr>`).join("");
+
+ renderSummaries();
+}
+
+function renderSummaries(){
+ $("sumRev").textContent=money(records.reduce((a,r)=>a+(+r.rev||0),0));
+ $("sumQty").textContent=records.reduce((a,r)=>a+(+r.qty||0),0);
+
+ const staff={};
+ const cats={};
+
+ records.forEach(r=>{
+  const code=r.code||"";
+  const name=r.name||"Chưa có tên";
+  const id=code+"|"+name;
+
+  if(!staff[id])staff[id]={code,name,qty:0,rev:0,straight:0,install:0};
+
+  ["qty","rev","straight","install"].forEach(k=>{
+   staff[id][k]+=Number(r[k]||0);
+  });
+
+  const cat=r.cat||"-1";
+  if(!cats[cat])cats[cat]={qty:0,rev:0};
+
+  cats[cat].qty+=Number(r.qty||0);
+  cats[cat].rev+=Number(r.rev||0);
+ });
+
+ $("activeStaff").textContent=Object.values(staff).filter(s=>s.rev>0).length;
+ $("staffCount").textContent=Object.keys(staff).length;
+
+ $("staffBody").innerHTML=Object.values(staff).map(s=>`
+ <tr>
+ <td>${esc(s.code)}</td><td>${esc(s.name)}</td>
+ <td>${s.qty}</td><td>${money(s.rev)}</td>
+ <td>${money(s.straight)}</td><td>${money(s.install)}</td>
+ </tr>`).join("");
+
+ $("catBody").innerHTML=Object.entries(cats).map(([k,v])=>`
+ <tr><td>${esc(CATS[k]||k)}</td>
+ <td>${v.qty}</td><td>${money(v.rev)}</td></tr>`).join("");
+}
+
+function esc(s){
+ return String(s??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;",
+ "<":"&lt;",
+ ">":"&gt;",
+ '"':"&quot;",
+ "'":"&#39;"
+ })[c]);
+}
+
+async function readOCR(){
+ const files=Array.from($("ocrFile").files);
+
+ if(!files.length)return alert("Vui lòng chọn ít nhất một ảnh!");
+ if(isOCRRunning)return alert("OCR đang chạy, vui lòng chờ!");
+
+ if(!window.Tesseract)return alert("OCR chưa tải được. Kiểm tra Internet!");
+
+ isOCRRunning=true;
+ $("ocrBtn").disabled=true;
+ $("ocrStatus").textContent="Đang chuẩn bị OCR...";
+ $("ocrText").value="";
+ $("ocrProgress").style.width="0%";
+
+ const results=[];
+
+ try{
+  for(let i=0;i<files.length;i++){
+   const f=files[i];
+
+   $("ocrStatus").textContent=
+   "Đang đọc ảnh "+(i+1)+"/"+files.length+": "+f.name;
+
+   try{
+    const result=await Tesseract.recognize(f,"vie+eng",{
+     logger:m=>{
+      if(m.status==="recognizing text"){
+       const p=Math.round(m.progress*100);
+       $("ocrStatus").textContent=
+       "Ảnh "+(i+1)+"/"+files.length+" · "+p+"%";
+       $("ocrProgress").style.width=p+"%";
+      }
+     }
+    });
+
+    results.push(
+     "===== ẢNH "+(i+1)+" : "+f.name+" =====\n"+
+     result.data.text
+    );
+
+   }catch(e){
+    results.push(
+     "===== LỖI ẢNH "+f.name+" =====\n"+e.message
+    );
+   }
+
+   $("ocrText").value=results.join("\n\n");
+  }
+
+  $("ocrProgress").style.width="100%";
+  $("ocrStatus").textContent="Hoàn tất "+files.length+" ảnh. Kiểm tra kết quả OCR.";
+
+ }finally{
+  isOCRRunning=false;
+  $("ocrBtn").disabled=false;
+ }
+}
+
+function clearOCR(){
+ if(isOCRRunning)return alert("OCR đang chạy!");
+ $("ocrText").value="";
+ $("ocrFile").value="";
+ $("ocrProgress").style.width="0%";
+ $("ocrStatus").textContent="Đã xóa OCR.";
+}
+
+async function copyOCR(){
+ try{
+  await navigator.clipboard.writeText($("ocrText").value);
+  alert("Đã sao chép!");
+ }catch(e){
+  alert("Không thể sao chép tự động. Hãy Ctrl+A trong ô OCR.");
+ }
+}
+
+function exportJSON(){
+ const blob=new Blob([JSON.stringify(records,null,2)],{type:"application/json"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="DMX294_"+$("date").value+".json";
+ a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+function importJSON(){
+ const f=$("jsonFile").files[0];
+ if(!f)return alert("Chọn file JSON!");
+
+ const reader=new FileReader();
+
+ reader.onload=()=>{
+  try{
+   const data=JSON.parse(reader.result);
+   if(!Array.isArray(data))throw new Error("JSON không phải danh sách");
+
+   records=data;
+   localStorage.setItem(key(),JSON.stringify(records));
+   render();
+   alert("Đã nhập JSON thành công!");
+  }catch(e){
+   alert("File JSON không hợp lệ!");
+  }
+ };
+
+ reader.readAsText(f);
+}
+
+$("store").addEventListener("change",loadData);
+$("date").addEventListener("change",loadData);
+
+init();
 </script>
 </body>
 </html>
