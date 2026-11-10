@@ -107,6 +107,7 @@ $("staff").innerHTML=ranked.map((s,index)=>{
 const totalTar=Number(targets[key()+'_TOTAL']||0);
 $("totalTarget").value=totalTar||"";
 $("targetTotalText").textContent=totalTar?"Target: "+fmt(totalTar/1000000)+" triệu":"";
+$("targetDayDisplay").textContent=totalTar?fmt(totalTar/1000000)+" triệu":"—";
 // Doanh thu đang tính theo triệu; target nhập bằng VNĐ nên quy đổi trước khi chia.
 $("totalAch").textContent=totalTar?(100*total/(totalTar/1000000)).toFixed(1)+"%":"—";
 $("cats").innerHTML=Object.entries(ca).map(([k,v])=>`<tr><td>${k}</td><td>${CAT[k]||k}</td><td>${fmt(v.qty)}</td><td>${fmt(v.rev)}</td><td>${fmt(v.straight)}</td><td>${fmt(v.install)}</td></tr>`).join("")}
