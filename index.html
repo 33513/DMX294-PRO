@@ -91,7 +91,8 @@ function render(){ $("tbody").innerHTML=rows.map((r,i)=>`<tr>
 <td><input type="number" value="${r.install||0}" onchange="update(${i},'install',this.value)"></td>
 <td><input value="${esc(r.check||"Kiểm tra")}" onchange="update(${i},'check',this.value)"></td>
 <td><button class="red" onclick="removeRow(${i})">X</button></td></tr>`).join("");renderSummary()}
-function setTarget(k,v){targets[k]=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}\nfunction renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+r.name);if(!st[id])st[id]={id:r.id,name:r.name,qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>st[id][k]+=Number(r[k]||0));let c=r.cat||"-1";if(!ca[c])ca[c]={qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>ca[c][k]+=Number(r[k]||0))});
+function setTarget(k,v){targets[k]=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}
+function renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+r.name);if(!st[id])st[id]={id:r.id,name:r.name,qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>st[id][k]+=Number(r[k]||0));let c=r.cat||"-1";if(!ca[c])ca[c]={qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>ca[c][k]+=Number(r[k]||0))});
 let total=rows.reduce((a,r)=>a+Number(r.rev||0),0),q=rows.reduce((a,r)=>a+Number(r.qty||0),0);
 $("total").textContent=fmt(total)+" triệu";$("qty").textContent=fmt(q);$("active").textContent=Object.values(st).filter(x=>x.rev>0).length;$("count").textContent=Object.keys(st).length;
 $("staff").innerHTML=Object.values(st).map(s=>{
