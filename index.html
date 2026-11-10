@@ -39,50 +39,34 @@ function parseOCR(text){
  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),out=[],warn=[];
  let emp=null;
  const idRegex=/\bid\s*[:：]?\s*(\d{3,8})\b/i;
- const employeeNames={
-  "18868":"Nguyễn Thị Lý",
-  "33513":"Vi Đặng Nguyễn",
-  "71995":"Đặng Thị Thảo Trinh",
-  "258196":"Lê Xuân Hải",
-  "168190":"Nguyễn Văn Ngoan",
-  "171730":"Nguyễn Minh-Mai Trâm",
-  "281312":"Nguyễn Công Toàn",
-  "56283":"Trần Vi Linh",
-  "179512":"Phạm Văn Thuận"
- };
+ const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Vi Đặng Nguyễn","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vi Linh","179512":"Phạm Văn Thuận"};
  const catRegex=/(?:^|[+\-•]\s*|\s)(-1|10|11|[1-9])\s*[-–]\s*/;
  const isHeader=s=>/NHÓM HÀNG|SỐ DOANH|DT TRẢ|LƯỢNG|DOANH THU|ẢNH \d|Đơn vị|Target ngày|DT thực|DT dự kiến/i.test(s);
- const nums=s=>(s.match(/\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
- const nameFromLine=s=>s.replace(/(?:\s+\d+(?:[.,]\d+)?){1,4}\s*$/,"").replace(/^[+•\-]\s*/,"").trim();
+ const numTokens=s=>{
+  // OCR hay đọc số 0 thành chữ O/A; chỉ sửa ký tự đứng riêng trong phần số liệu
+  s=s.replace(/\b[AO]\b/gi,"0").replace(/[|]/g,"1");
+  return (s.match(/-?\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
+ };
  for(let i=0;i<lines.length;i++){
   const line=lines[i],idmatch=line.match(idRegex);
-  if(idmatch){
-   let nm=nameFromLine(line.replace(idRegex,"")).trim();
-   if(!nm){
-    for(let j=i-1;j>=Math.max(0,i-3);j--){
-     if(isHeader(lines[j])||idRegex.test(lines[j]))break;
-     if(/[A-Za-zÀ-ỹ]{2,}/.test(lines[j])){nm=nameFromLine(lines[j]);break}
-    }
-   }
-   emp={id:idmatch[1],name:employeeNames[idmatch[1]]||nm||"NV "+idmatch[1]};
-   continue;
-  }
+  if(idmatch){emp={id:idmatch[1],name:employeeNames[idmatch[1]]||"NV "+idmatch[1]};continue}
   if(!emp||isHeader(line))continue;
-  const cm=line.match(catRegex);
-  if(!cm)continue;
-  const code=cm[1];
-  let gathered=nums(line.slice(cm.index+cm[0].length));
-  // OCR frequently splits category label and its 4 numeric columns onto following lines
-  for(let j=i+1;j<Math.min(lines.length,i+6)&&gathered.length<4;j++){
-   if(idRegex.test(lines[j])||catRegex.test(lines[j])||isHeader(lines[j]))break;
-   gathered=gathered.concat(nums(lines[j]));
+  const cm=line.match(catRegex);if(!cm)continue;
+  const code=cm[1];let tail=line.slice(cm.index+cm[0].length);
+  // remove any repeated category number/name noise; collect the 4 numeric columns
+  let vals=numTokens(tail);
+  for(let j=i+1;j<Math.min(lines.length,i+7)&&vals.length<4;j++){
+   const nxt=lines[j];
+   if(idRegex.test(nxt)||catRegex.test(nxt)||isHeader(nxt))break;
+   // Don't collect standalone prose or table labels as numbers
+   vals=vals.concat(numTokens(nxt));
   }
-  if(gathered.length>=4){
-   const v=gathered.slice(-4);
-   out.push({id:emp.id,name:emp.name,cat:code,qty:v[0],rev:v[1],straight:v[2],install:v[3],check:"OCR - kiểm tra"});
-  }else warn.push(`Dòng ${i+1}: ngành ${code} thiếu 4 số: "${line}"`);
+  if(vals.length>=4){
+   const v=vals.slice(0,4);
+   out.push({id:emp.id,name:emp.name,cat:code,qty:v[0],rev:v[1],straight:v[2],install:v[3],check:"OCR - rà soát"});
+  }else warn.push(`Dòng ${i+1}: ngành ${code} chỉ nhận ${vals.length}/4 số: "${line}"`);
  }
- if(!out.length)warn.push("Không nhận diện được dòng ngành hàng. Kiểm tra OCR có chứa mã ngành -1, 1…11 và mã ID nhân viên.");
+ if(!out.length)warn.push("Không nhận diện được dòng ngành hàng. Cần kiểm tra OCR.");
  return {out,warn};
 }
 async function processImages(){
