@@ -12,7 +12,8 @@
 <main>
 <div class="card row"><label>Cửa hàng</label><select id="store"></select><input id="newStore" placeholder="Tên cửa hàng mới"><button onclick="addStore()">+ Cửa hàng</button><label>Ngày</label><input type="date" id="date"><button onclick="save()">Lưu</button><button class="alt" onclick="exportData()">Xuất JSON</button><input type="file" id="importFile" accept=".json"><button class="alt" onclick="importData()">Nhập JSON</button></div>
 <div class="card"><h3>1. Chọn nhiều ảnh báo cáo</h3><div class="row"><input id="files" type="file" accept="image/*" multiple><button id="run" onclick="processImages()">OCR + Phân tích</button><button class="alt" onclick="clearAllOCR()">Xóa OCR</button></div><div id="status" class="note">Chọn ảnh theo thứ tự các trang báo cáo. OCR sẽ xử lý lần lượt.</div><div class="bar"><div id="progress"></div></div><textarea id="ocr" placeholder="Văn bản OCR tổng hợp..."></textarea><p class="note">Parser dựa vào ID nhân viên và mã ngành. Do OCR có thể đọc sai, hãy rà soát các dòng được đánh dấu.</p></div>
-<div class="stats"><div class="stat"><small>Doanh thu ngành hàng</small><b id="total">0 triệu</b></div><div class="stat"><small>Target tổng (triệu)</small><input id="totalTarget" type="number" min="0" step="0.1" placeholder="Nhập target" style="width:100%" onchange="setTotalTarget(this.value)"></div><div class="stat"><small>Doanh thu trả góp</small><b id="installTotal">0 triệu</b></div><div class="stat"><small>% hoàn thành target</small><b id="totalAch">—</b></div></div>
+<div class="stats"><div class="stat"><small>Doanh thu ngành hàng</small><b id="total">0 triệu</b></div><div class="stat"><small>Doanh thu trả góp</small><b id="installTotal">0 triệu</b></div><div class="stat"><small>% hoàn thành target</small><b id="totalAch">—</b></div></div>
+<div class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><label for="totalTarget"><b>Target tổng doanh thu (VNĐ)</b></label><input id="totalTarget" type="number" min="0" step="1000000" placeholder="VD: 30000000" style="width:220px" onchange="setTotalTarget(this.value)"><span class="note">Nhập số tiền VNĐ; hệ thống tự quy đổi sang triệu để tính % hoàn thành.</span><b id="targetTotalText"></b></div>
 <div class="card" style="display:none!important" aria-hidden="true"><h3>2. Dữ liệu đã phân tích (triệu đồng)</h3><div id="analyzedData"><table><tbody id="tbody"></tbody></table></div></div>
 <div class="card"><h3>3. Tổng hợp nhân viên (gom theo ID)</h3><div class="note">Mỗi ID chỉ hiển thị một dòng. Nhập TARGET cho từng nhân viên; tỷ trọng góp = doanh thu góp / doanh thu.</div><div class="scroll"><table><thead><tr><th>Hạng</th><th>ID</th><th>Tên</th><th>Số lượng</th><th>Doanh thu</th><th>Doanh thu góp</th><th>Tỷ trọng góp</th><th>Target</th><th>% hoàn thành target</th></tr></thead><tbody id="staff"></tbody></table></div></div>
 <div class="card"><h3>4. Tổng hợp ngành hàng</h3><div class="scroll"><table><thead><tr><th>Mã</th><th>Ngành hàng</th><th>SL</th><th>DT</th><th>Trả thẳng</th><th>Trả góp</th></tr></thead><tbody id="cats"></tbody></table></div></div>
@@ -105,7 +106,9 @@ $("staff").innerHTML=ranked.map((s,index)=>{
  }).join("");
 const totalTar=Number(targets[key()+'_TOTAL']||0);
 $("totalTarget").value=totalTar||"";
-$("totalAch").textContent=totalTar?(100*total/totalTar).toFixed(1)+"%":"—";
+$("targetTotalText").textContent=totalTar?"Target: "+fmt(totalTar/1000000)+" triệu":"";
+// Doanh thu đang tính theo triệu; target nhập bằng VNĐ nên quy đổi trước khi chia.
+$("totalAch").textContent=totalTar?(100*total/(totalTar/1000000)).toFixed(1)+"%":"—";
 $("cats").innerHTML=Object.entries(ca).map(([k,v])=>`<tr><td>${k}</td><td>${CAT[k]||k}</td><td>${fmt(v.qty)}</td><td>${fmt(v.rev)}</td><td>${fmt(v.straight)}</td><td>${fmt(v.install)}</td></tr>`).join("")}
 $("store").addEventListener("change",load);$("date").addEventListener("change",load);init();
 </script></body></html>
