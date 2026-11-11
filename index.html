@@ -1,4 +1,3 @@
-```
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -53,24 +52,29 @@ table input{padding:7px 9px;border-radius:7px}
 @media(max-width:900px){main{padding:0 10px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}header{padding:18px}}
 @media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stat b{font-size:18px}.row input[type=date]{width:100%}header h2{font-size:23px}}
 
-/* Staff table: mobile readable, no narrow stacked percentage text */
-#staffTable{min-width:900px;table-layout:auto}
-#staffTable th,#staffTable td{vertical-align:middle}
-#staffTable th:nth-child(7),#staffTable td:nth-child(7){min-width:145px;width:145px;white-space:nowrap}
-#staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:23px;font-weight:800}
-#staffTable td:nth-child(5){font-size:17px;font-weight:700}
-#staffTable td:nth-child(7){font-size:20px;font-weight:800;white-space:nowrap;padding:12px}
-#staffTable .staff-ach-low{color:#ff5968!important;background:rgba(255,65,85,.16);border:1px solid rgba(255,65,85,.25);border-radius:8px}
-#staffTable .staff-ach-high{color:#28dfa0!important;background:rgba(35,220,145,.15);border:1px solid rgba(35,220,145,.25);border-radius:8px}
+/* Staff summary: keep columns readable on phones via horizontal scroll */
+#staffTable{min-width:820px;table-layout:fixed;white-space:nowrap}
+#staffTable th,#staffTable td{vertical-align:middle;padding:11px 10px;white-space:nowrap}
+#staffTable th:nth-child(1),#staffTable td:nth-child(1){width:82px}
+#staffTable th:nth-child(2),#staffTable td:nth-child(2){width:170px}
+#staffTable th:nth-child(3),#staffTable td:nth-child(3){width:115px}
+#staffTable th:nth-child(4),#staffTable td:nth-child(4){width:115px}
+#staffTable th:nth-child(5),#staffTable td:nth-child(5){width:100px}
+#staffTable th:nth-child(6),#staffTable td:nth-child(6){width:115px}
+#staffTable th:nth-child(7),#staffTable td:nth-child(7){width:145px}
+#staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:21px;font-weight:800}
+#staffTable td:nth-child(5){font-size:16px;font-weight:700}
+#staffTable td:nth-child(7){font-size:19px;font-weight:800}
+#staffTable .staff-ach-low{color:#ff5968!important;background:rgba(255,65,85,.16);border:1px solid rgba(255,65,85,.25);border-radius:8px;padding:7px 9px}
+#staffTable .staff-ach-high{color:#28dfa0!important;background:rgba(35,220,145,.15);border:1px solid rgba(35,220,145,.25);border-radius:8px;padding:7px 9px}
 #staffTable .staff-ach-na{color:#aabbd0}
+#staffTable input{width:100px!important;min-width:100px;font-size:16px!important}
 @media(max-width:600px){
- #staffTable{min-width:900px;font-size:16px}
- #staffTable th,#staffTable td{padding:13px 12px}
- #staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:25px}
- #staffTable td:nth-child(7){font-size:22px;min-width:150px;width:150px}
- #staffTable input{font-size:16px!important}
+ #staffTable{min-width:820px;font-size:15px}
+ #staffTable th,#staffTable td{padding:12px 10px}
+ #staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:23px}
+ #staffTable td:nth-child(7){font-size:20px}
 }
-
 </style>
 </head>
 <body>
@@ -81,7 +85,7 @@ table input{padding:7px 9px;border-radius:7px}
 <div class="card"><h3>1. Chọn nhiều ảnh báo cáo</h3><div class="row"><input id="files" type="file" accept="image/*" multiple><button id="run" onclick="processImages()">OCR + Phân tích</button><button class="alt" onclick="clearAllOCR()">Xóa OCR</button></div><div id="status" class="note">Chọn ảnh theo thứ tự các trang báo cáo. OCR sẽ xử lý lần lượt.</div><div class="bar"><div id="progress"></div></div><textarea id="ocr" placeholder="Văn bản OCR tổng hợp..."></textarea><p class="note">Parser dựa vào ID nhân viên và mã ngành. Do OCR có thể đọc sai, hãy rà soát các dòng được đánh dấu.</p></div>
 <div class="stats"><div class="stat"><small>Doanh thu tổng</small><b id="total">0 triệu</b></div><div class="stat"><small>Target ngày</small><b id="targetDayDisplay">—</b></div><div class="stat"><small>% hoàn thành target</small><b id="totalAch">—</b></div><div class="stat"><small>Doanh thu trả góp</small><b id="installTotal">0 triệu</b></div><div class="stat"><small>% trả góp</small><b id="installPct">0.0%</b></div></div>
 <div class="card" style="display:none!important" aria-hidden="true"><h3>2. Dữ liệu đã phân tích (triệu đồng)</h3><div id="analyzedData"><table><tbody id="tbody"></tbody></table></div></div>
-<div class="card"><h3>3. Tổng hợp nhân viên (gom theo ID)</h3><div class="note">Mỗi ID chỉ hiển thị một dòng. Nhập TARGET cho từng nhân viên; tỷ trọng góp = doanh thu góp / doanh thu.</div><div class="scroll"><table><thead><tr><th>Hạng</th><th>ID</th><th>Tên</th><th>Số lượng</th><th>Doanh thu</th><th>Doanh thu góp</th><th>Tỷ trọng góp</th><th>Target</th><th>% hoàn thành target</th></tr></thead><tbody id="staff"></tbody></table></div></div>
+<div class="card"><h3>3. Tổng hợp nhân viên (gom theo ID)</h3><div class="note">Mỗi ID chỉ hiển thị một dòng. Nhập TARGET cho từng nhân viên; tỷ trọng góp = doanh thu góp / doanh thu.</div><div class="scroll"><table id="staffTable"><thead><tr><th>ID</th><th>Tên nhân viên</th><th>Doanh thu</th><th>Doanh thu góp</th><th>Tỷ trọng góp</th><th>Target</th><th>% hoàn thành target</th></tr></thead><tbody id="staff"></tbody></table></div></div>
 <div class="card"><h3>4. Tổng hợp ngành hàng</h3><div class="scroll"><table><thead><tr><th>Mã</th><th>Ngành hàng</th><th>SL</th><th>DT</th><th>Trả thẳng</th><th>Trả góp</th></tr></thead><tbody id="cats"></tbody></table></div></div>
 <div class="card"><h3>5. Cảnh báo / kiểm tra</h3><div id="warnings" class="note">Chưa phân tích dữ liệu.</div></div>
 <p class="note">Dữ liệu lưu trên trình duyệt này (localStorage), chưa đồng bộ giữa các máy.</p>
@@ -165,12 +169,13 @@ function renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+
 let total=rows.reduce((a,r)=>a+Number(r.rev||0),0),q=rows.reduce((a,r)=>a+Number(r.qty||0),0),installTotal=rows.reduce((a,r)=>a+Number(r.install||0),0);
 $("total").textContent=fmt(total)+" triệu";$("installTotal").textContent=fmt(installTotal)+" triệu";$("installPct").textContent=(total?100*installTotal/total:0).toFixed(1)+"%";
 const ranked=Object.values(st).sort((a,b)=>b.rev-a.rev||String(a.id).localeCompare(String(b.id)));
-$("staff").innerHTML=ranked.map((s,index)=>{
- const tk=key()+"_"+s.id,tar=Number(targets[tk]||0),share=s.rev?100*s.install/s.rev:0,ach=tar?100*s.rev/tar:0;
- const rank=index+1,medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank;
- return `<tr><td><b>${medal}</b></td><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${fmt(s.qty)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td>${tar?ach.toFixed(1)+"%":"—"}</td></tr>`
- }).join("");
 const totalTar=Number(targets[key()+'_TOTAL']||0);
+const storeAch=totalTar?100*total/(totalTar/1000000):0;
+$("staff").innerHTML=ranked.map(s=>{
+ const tk=key()+"_"+s.id,tar=Number(targets[tk]||0),share=s.rev?100*s.install/s.rev:0,ach=tar?100*s.rev/tar:0;
+ const achClass=!tar?"staff-ach-na":ach<storeAch?"staff-ach-low":"staff-ach-high";
+ return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td><span class="${achClass}">${tar?ach.toFixed(1)+"%":"—"}</span></td></tr>`
+ }).join("");
 $("totalTarget").value=totalTar||"";
 $("targetTotalText").textContent=totalTar?"Target: "+fmt(totalTar/1000000)+" triệu":"";
 $("targetDayDisplay").textContent=totalTar?fmt(totalTar/1000000)+" triệu":"—";
@@ -179,4 +184,3 @@ $("totalAch").textContent=totalTar?(100*total/(totalTar/1000000)).toFixed(1)+"%"
 $("cats").innerHTML=Object.entries(ca).map(([k,v])=>`<tr><td>${k}</td><td>${CAT[k]||k}</td><td>${fmt(v.qty)}</td><td>${fmt(v.rev)}</td><td>${fmt(v.straight)}</td><td>${fmt(v.install)}</td></tr>`).join("")}
 $("store").addEventListener("change",load);$("date").addEventListener("change",load);init();
 </script></body></html>
-```
