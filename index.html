@@ -85,37 +85,32 @@ function cleanNum(s){return Number(String(s||"").replace(/[^\d.-]/g,""))||0}
 // Conservative: only accepts a category record when 4 numeric tokens are found on the same OCR line.
 function parseOCR(text){
  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)
-  // Bỏ dòng phân trang/tổng kết, không phải dữ liệu nhân viên/ngành hàng
-  .filter(x=>!/^\d+\s*[-–/]\s*\d+\s*\/\s*Tổng\s*\d+\s*dòng/i.test(x)
-    && !/^Tổng\s*\d+\s*dòng/i.test(x)),out=[],warn=[];
- const idRegex=/\bid\s*[:：]?\s*(\d{3,8})\b/i;
- const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Đặng Nguyễn Vũ Vi","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vi Linh","179512":"Phạm Văn Thuận","111566":"Nguyễn Nhật Minh"};
- const nums=s=>(s.replace(/\b[AO]\b/gi,"0").replace(/[|]/g,"1").match(/-?\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
- const seen=new Set();
+  .filter(x=>!/^\d+\s*[-–/]\s*\d+\s*\/\s*Tổng\s*\d+\s*dòng/i.test(x)&&!/^Tổng\s*\d+\s*dòng/i.test(x));
+ const out=[],warn=[],idRegex=/\bid\s*[:：]?\s*(\d{3,8})\b/i;
+ const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Đặng Nguyễn Vũ Vi","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vũ Linh","179512":"Phạm Văn Thuận","111566":"Nguyễn Nhật Minh"};
+ const nums=s=>(s.replace(/\b[AO]\b/gi,"0").replace(/[|]/g,"1").match(/\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
+ const byId=new Map();
  for(let i=0;i<lines.length;i++){
-  const m=lines[i].match(idRegex);if(!m)continue;
-  const id=m[1]; if(seen.has(id))continue; seen.add(id);
-  // Search backward in the current employee block for the row containing numeric columns.
-  let vals=[],rowLine="",nameText="";
-  for(let j=i-1;j>=Math.max(0,i-5);j--){
+  const m=lines[i].match(idRegex);if(!m)continue;const id=m[1];
+  // Numeric employee row is immediately above ID; never combine columns from other lines.
+  let vals=[],rowIndex=i-1;
+  for(let j=i-1;j>=Math.max(0,i-3);j--){
    if(idRegex.test(lines[j]))break;
    const n=nums(lines[j]);
-   if(n.length>=5){vals=n.slice(-5);rowLine=lines[j];nameText=lines[j].replace(/^\+\s*/,"").replace(/-?\d+(?:[.,]\d+)?/g," ").trim();break}
-   if(lines[j].startsWith("+")||lines[j].includes(" 0 0 0"))nameText=(lines[j].replace(/^\+\s*/,"")+" "+nameText).trim();
-  // OCR sometimes wraps the numeric row onto a second line.
-  if(n.length && n.length<5 && !rowLine){vals=n.concat(vals);rowLine=lines[j];}
-  if(vals.length>=5){vals=vals.slice(-5);break}
-  if(j<i-1 && lines[j].startsWith("+"))break;
+   if(n.length>=5){vals=n.slice(-5);rowIndex=j;break}
+   if(j<i-1&&lines[j].startsWith("+"))break;
   }
-  if(vals.length<5){warn.push(`ID ${id}: không tìm đủ 5 cột số ở dòng nhân viên.`);continue}
-  const name=employeeNames[id]||nameText.replace(/\b(id|nhân viên)\b/ig,"").trim()||"NV "+id;
-  // OCR table: SL, DTQĐ, and three detail columns. Keep DTQĐ as revenue;
-  // third value is straight-pay detail, fifth value is installment detail.
-  // Báo cáo gốc: SL, DTQĐ, DT khoản vay, DT trả thẳng, DT trả góp
-  out.push({id,name,cat:"-1",qty:vals[0],rev:vals[1],loan:vals[2],straight:vals[3],install:vals[4],check:"OCR bảng nhân viên - kiểm tra"});
+  if(vals.length!==5){warn.push(`ID ${id}: không nhận đủ 5 cột số ngay trước ID.`);continue}
+  const name=employeeNames[id]||"NV "+id;
+  // Exact report columns: SL, DTQĐ, DT khoản vay, DT trả thẳng QĐ, DT trả góp QĐ
+  const rec={id,name,cat:"-1",qty:vals[0],rev:vals[1],loan:vals[2],straight:vals[3],install:vals[4],check:"OCR bảng nhân viên"};
+  // One employee summary row per ID; repeated OCR pages overwrite, never sum duplicate employee totals.
+  byId.set(id,rec);
  }
+ out.push(...byId.values());
+ // Luôn hiển thị Trần Vũ Linh (ID 56283), kể cả OCR không bắt được dòng doanh thu.
+ if(!byId.has("56283"))out.push({id:"56283",name:"Trần Vũ Linh",cat:"-1",qty:0,rev:0,loan:0,straight:0,install:0,check:"Không nhận được dòng OCR"});
  if(!out.length)warn.push("Không nhận diện được bảng nhân viên. Kiểm tra OCR có dòng id: XXXXX.");
- warn.push("Đã lấy doanh thu theo cột DTQĐ. OCR có 5 số liệu mỗi nhân viên; cột trả thẳng/trả góp cần đối chiếu báo cáo gốc.");
  return {out,warn};
 }
 async function processImages(){
