@@ -53,32 +53,17 @@ table input{padding:7px 9px;border-radius:7px}
 @media(max-width:900px){main{padding:0 10px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}header{padding:18px}}
 @media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stat b{font-size:18px}.row input[type=date]{width:100%}header h2{font-size:23px}}
 
-/* Mobile compact staff summary */
+/* Staff table on mobile: preserve all 7 columns, scroll horizontally instead of squeezing */
+#staffTable{min-width:780px;width:100%;table-layout:auto;white-space:nowrap}
+#staffTable th,#staffTable td{white-space:nowrap;padding:10px 12px;overflow-wrap:normal}
+#staffTable th:nth-child(2),#staffTable td:nth-child(2){min-width:155px}
+#staffTable th:nth-child(7),#staffTable td:nth-child(7){min-width:135px}
+#staffTable input{width:76px!important;min-width:76px;padding:7px 8px;font-size:14px}
 @media(max-width:600px){
-  #staffTable{table-layout:fixed;width:100%;white-space:normal;font-size:12px}
-  #staffTable th,#staffTable td{padding:8px 5px;white-space:normal;overflow-wrap:anywhere}
-  #staffTable th:nth-child(1),#staffTable td:nth-child(1){width:19%}
-  #staffTable th:nth-child(2),#staffTable td:nth-child(2){width:29%}
-  #staffTable th:nth-child(3),#staffTable td:nth-child(3){width:16%}
-  #staffTable th:nth-child(4),#staffTable td:nth-child(4){width:16%}
-  #staffTable th:nth-child(5),#staffTable td:nth-child(5){width:20%}
-  #staffTable input{width:100%!important;min-width:0;padding:5px 3px;font-size:11px}
-  #staffTable td:nth-child(1){font-size:10px}
+  #staffTable{font-size:14px}
+  #staffTable th,#staffTable td{padding:10px 9px}
+  .card:has(#staffTable) .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
-
-/* Mobile: larger numeric values for staff table */
-@media(max-width:600px){
-  #staffTable td:nth-child(3),
-  #staffTable td:nth-child(4),
-  #staffTable td:nth-child(5),
-  #staffTable td:nth-child(6),
-  #staffTable td:nth-child(7){font-size:15px;font-weight:800}
-  #staffTable td:nth-child(3) b{font-size:17px}
-  #staffTable td:nth-child(7){font-size:14px}
-}
-#staffTable .target-ach{font-weight:800;padding:4px 6px;border-radius:6px;display:inline-block;min-width:52px;text-align:center}
-#staffTable .target-ach.low{color:#ff5b68;background:#ff5b6818;border:1px solid #ff5b6840}
-#staffTable .target-ach.high{color:#28d6a1;background:#28d6a118;border:1px solid #28d6a140}
 </style>
 </head>
 <body>
@@ -169,7 +154,6 @@ function render(){ $("tbody").innerHTML=rows.map((r,i)=>`<tr>
 <td><button class="red" onclick="removeRow(${i})">X</button></td></tr>`).join("");renderSummary()}
 function setTarget(k,v){targets[k]=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}
 function setTotalTarget(v){targets[key()+'_TOTAL']=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}
-function totalAchValue(){const t=Number(targets[key()+"_TOTAL"]||0);const rev=rows.reduce((a,r)=>a+Number(r.rev||0),0);return t?100*rev/(t/1000000):0}
 function renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+r.name);if(!st[id])st[id]={id:r.id,name:r.name,qty:0,rev:0,loan:0,straight:0,install:0};["qty","rev","loan","straight","install"].forEach(k=>st[id][k]+=Number(r[k]||0));let c=r.cat||"-1";if(!ca[c])ca[c]={qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>ca[c][k]+=Number(r[k]||0))});
 let total=rows.reduce((a,r)=>a+Number(r.rev||0),0),q=rows.reduce((a,r)=>a+Number(r.qty||0),0),installTotal=rows.reduce((a,r)=>a+Number(r.install||0),0);
 $("total").textContent=fmt(total)+" triệu";$("installTotal").textContent=fmt(installTotal)+" triệu";$("installPct").textContent=(total?100*installTotal/total:0).toFixed(1)+"%";
@@ -177,7 +161,7 @@ const ranked=Object.values(st).sort((a,b)=>b.rev-a.rev||String(a.id).localeCompa
 $("staff").innerHTML=ranked.map((s,index)=>{
  const tk=key()+"_"+s.id,tar=Number(targets[tk]||0),share=s.rev?100*s.install/s.rev:0,ach=tar?100*s.rev/tar:0;
  const rank=index+1,medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank;
- return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td><span class="target-ach ${tar?(ach<totalAchValue()?"low":"high"):""}">${tar?ach.toFixed(1)+"%":"—"}</span></td></tr>`
+ return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td>${tar?ach.toFixed(1)+"%":"—"}</td></tr>`
  }).join("");
 const totalTar=Number(targets[key()+'_TOTAL']||0);
 $("totalTarget").value=totalTar||"";
