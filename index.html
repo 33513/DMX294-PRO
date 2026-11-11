@@ -62,7 +62,7 @@ table input{padding:7px 9px;border-radius:7px}
 <div class="card"><h3>1. Chọn nhiều ảnh báo cáo</h3><div class="row"><input id="files" type="file" accept="image/*" multiple><button id="run" onclick="processImages()">OCR + Phân tích</button><button class="alt" onclick="clearAllOCR()">Xóa OCR</button></div><div id="status" class="note">Chọn ảnh theo thứ tự các trang báo cáo. OCR sẽ xử lý lần lượt.</div><div class="bar"><div id="progress"></div></div><textarea id="ocr" placeholder="Văn bản OCR tổng hợp..."></textarea><p class="note">Parser dựa vào ID nhân viên và mã ngành. Do OCR có thể đọc sai, hãy rà soát các dòng được đánh dấu.</p></div>
 <div class="stats"><div class="stat"><small>Doanh thu tổng</small><b id="total">0 triệu</b></div><div class="stat"><small>Target ngày</small><b id="targetDayDisplay">—</b></div><div class="stat"><small>% hoàn thành target</small><b id="totalAch">—</b></div><div class="stat"><small>Doanh thu trả góp</small><b id="installTotal">0 triệu</b></div><div class="stat"><small>% trả góp</small><b id="installPct">0.0%</b></div></div>
 <div class="card" style="display:none!important" aria-hidden="true"><h3>2. Dữ liệu đã phân tích (triệu đồng)</h3><div id="analyzedData"><table><tbody id="tbody"></tbody></table></div></div>
-<div class="card"><h3>3. Tổng hợp nhân viên (gom theo ID)</h3><div class="note">Mỗi ID chỉ hiển thị một dòng. Nhập TARGET cho từng nhân viên; tỷ trọng góp = doanh thu góp / doanh thu.</div><div class="scroll"><table><thead><tr><th>Hạng</th><th>ID</th><th>Tên</th><th>Số lượng</th><th>Doanh thu</th><th>Doanh thu góp</th><th>Tỷ trọng góp</th><th>Target</th><th>% hoàn thành target</th></tr></thead><tbody id="staff"></tbody></table></div></div>
+<div class="card"><h3>3. Tổng hợp nhân viên (gom theo ID)</h3><div class="note">Mỗi ID chỉ hiển thị một dòng. Nhập TARGET cho từng nhân viên; tỷ trọng góp = doanh thu góp / doanh thu.</div><div class="scroll"><table><thead><tr><th>ID</th><th>Tên</th><th>Doanh thu</th><th>Doanh thu góp</th><th>Tỷ trọng góp</th><th>Target</th><th>% hoàn thành target</th></tr></thead><tbody id="staff"></tbody></table></div></div>
 <div class="card" id="categoryCard" style="display:none"><h3>4. Tổng hợp ngành hàng</h3><div class="scroll"><table><thead><tr><th>Mã</th><th>Ngành hàng</th><th>SL</th><th>DT</th><th>Trả thẳng</th><th>Trả góp</th></tr></thead><tbody id="cats"></tbody></table></div></div>
 <div class="card"><h3>5. Cảnh báo / kiểm tra</h3><div id="warnings" class="note">Chưa phân tích dữ liệu.</div></div>
 <p class="note">Dữ liệu lưu trên trình duyệt này (localStorage), chưa đồng bộ giữa các máy.</p>
@@ -89,7 +89,7 @@ function parseOCR(text){
   .filter(x=>!/^\d+\s*[-–/]\s*\d+\s*\/\s*Tổng\s*\d+\s*dòng/i.test(x)
     && !/^Tổng\s*\d+\s*dòng/i.test(x)),out=[],warn=[];
  const idRegex=/\bid\s*[:：]?\s*(\d{3,8})\b/i;
- const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Vi Đặng Nguyễn","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vi Linh","179512":"Phạm Văn Thuận","111566":"Nguyễn Nhật Minh"};
+ const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Đặng Nguyễn Vũ Vi","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vi Linh","179512":"Phạm Văn Thuận","111566":"Nguyễn Nhật Minh"};
  const nums=s=>(s.replace(/\b[AO]\b/gi,"0").replace(/[|]/g,"1").match(/-?\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
  const seen=new Set();
  for(let i=0;i<lines.length;i++){
@@ -111,7 +111,8 @@ function parseOCR(text){
   const name=employeeNames[id]||nameText.replace(/\b(id|nhân viên)\b/ig,"").trim()||"NV "+id;
   // OCR table: SL, DTQĐ, and three detail columns. Keep DTQĐ as revenue;
   // third value is straight-pay detail, fifth value is installment detail.
-  out.push({id,name,cat:"-1",qty:vals[0],rev:vals[1],straight:vals[2],install:vals[4],check:"OCR bảng nhân viên - kiểm tra"});
+  // Báo cáo gốc: SL, DTQĐ, DT khoản vay, DT trả thẳng, DT trả góp
+  out.push({id,name,cat:"-1",qty:vals[0],rev:vals[1],loan:vals[2],straight:vals[3],install:vals[4],check:"OCR bảng nhân viên - kiểm tra"});
  }
  if(!out.length)warn.push("Không nhận diện được bảng nhân viên. Kiểm tra OCR có dòng id: XXXXX.");
  warn.push("Đã lấy doanh thu theo cột DTQĐ. OCR có 5 số liệu mỗi nhân viên; cột trả thẳng/trả góp cần đối chiếu báo cáo gốc.");
@@ -142,14 +143,14 @@ function render(){ $("tbody").innerHTML=rows.map((r,i)=>`<tr>
 <td><button class="red" onclick="removeRow(${i})">X</button></td></tr>`).join("");renderSummary()}
 function setTarget(k,v){targets[k]=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}
 function setTotalTarget(v){targets[key()+'_TOTAL']=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}
-function renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+r.name);if(!st[id])st[id]={id:r.id,name:r.name,qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>st[id][k]+=Number(r[k]||0));let c=r.cat||"-1";if(!ca[c])ca[c]={qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>ca[c][k]+=Number(r[k]||0))});
+function renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+r.name);if(!st[id])st[id]={id:r.id,name:r.name,qty:0,rev:0,loan:0,straight:0,install:0};["qty","rev","loan","straight","install"].forEach(k=>st[id][k]+=Number(r[k]||0));let c=r.cat||"-1";if(!ca[c])ca[c]={qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>ca[c][k]+=Number(r[k]||0))});
 let total=rows.reduce((a,r)=>a+Number(r.rev||0),0),q=rows.reduce((a,r)=>a+Number(r.qty||0),0),installTotal=rows.reduce((a,r)=>a+Number(r.install||0),0);
 $("total").textContent=fmt(total)+" triệu";$("installTotal").textContent=fmt(installTotal)+" triệu";$("installPct").textContent=(total?100*installTotal/total:0).toFixed(1)+"%";
 const ranked=Object.values(st).sort((a,b)=>b.rev-a.rev||String(a.id).localeCompare(String(b.id)));
 $("staff").innerHTML=ranked.map((s,index)=>{
  const tk=key()+"_"+s.id,tar=Number(targets[tk]||0),share=s.rev?100*s.install/s.rev:0,ach=tar?100*s.rev/tar:0;
  const rank=index+1,medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank;
- return `<tr><td><b>${medal}</b></td><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${fmt(s.qty)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td>${tar?ach.toFixed(1)+"%":"—"}</td></tr>`
+ return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td>${tar?ach.toFixed(1)+"%":"—"}</td></tr>`
  }).join("");
 const totalTar=Number(targets[key()+'_TOTAL']||0);
 $("totalTarget").value=totalTar||"";
