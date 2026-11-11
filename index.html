@@ -64,6 +64,20 @@ table input{padding:7px 9px;border-radius:7px}
   #staffTable th,#staffTable td{padding:10px 9px}
   .card:has(#staffTable) .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
+ 
+/* Staff summary: larger figures and target-achievement comparison */
+#staffTable td{font-size:17px}
+#staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:20px;font-weight:700}
+#staffTable td:nth-child(7){font-size:19px;font-weight:800;text-align:center}
+#staffTable .staff-ach-low{color:#ff626d!important;background:rgba(255,70,85,.13);border-radius:8px}
+#staffTable .staff-ach-high{color:#31dfa0!important;background:rgba(35,220,145,.13);border-radius:8px}
+#staffTable .staff-ach-na{color:#aabbd0}
+@media(max-width:600px){
+  #staffTable td{font-size:18px}
+  #staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:22px}
+  #staffTable td:nth-child(7){font-size:21px}
+}
+
 </style>
 </head>
 <body>
@@ -160,8 +174,9 @@ $("total").textContent=fmt(total)+" triệu";$("installTotal").textContent=fmt(i
 const ranked=Object.values(st).sort((a,b)=>b.rev-a.rev||String(a.id).localeCompare(String(b.id)));
 $("staff").innerHTML=ranked.map((s,index)=>{
  const tk=key()+"_"+s.id,tar=Number(targets[tk]||0),share=s.rev?100*s.install/s.rev:0,ach=tar?100*s.rev/tar:0;
- const rank=index+1,medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank;
- return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td>${tar?ach.toFixed(1)+"%":"—"}</td></tr>`
+ const storeAch=totalTar?100*total/(totalTar/1000000):0;
+ const achClass=tar?(ach<storeAch?"staff-ach-low":"staff-ach-high"):"staff-ach-na";
+ return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td><b>${fmt(s.install)}</b></td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td class="${achClass}">${tar?ach.toFixed(1)+"%":"—"}</td></tr>`
  }).join("");
 const totalTar=Number(targets[key()+'_TOTAL']||0);
 $("totalTarget").value=totalTar||"";
