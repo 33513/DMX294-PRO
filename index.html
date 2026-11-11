@@ -103,8 +103,12 @@ function parseOCR(text){
   if(vals.length!==5){warn.push(`ID ${id}: không nhận đủ 5 cột số ngay trước ID.`);continue}
   const name=employeeNames[id]||"NV "+id;
   // Exact report columns: SL, DTQĐ, DT khoản vay, DT trả thẳng QĐ, DT trả góp QĐ
-  const rec={id,name,cat:"-1",qty:vals[0],rev:vals[1],loan:vals[2],straight:vals[3],install:vals[4],check:"OCR bảng nhân viên"};
-  // One employee summary row per ID; repeated OCR pages overwrite, never sum duplicate employee totals.
+  const rev=vals[1], rawInstall=vals[4];
+  // DT trả góp không thể lớn hơn DT quy đổi của cùng nhân viên; chặn số OCR lệch cột.
+  const install=Math.min(rawInstall,rev);
+  if(rawInstall>rev)warn.push(`ID ${id}: OCR trả góp ${rawInstall} vượt DTQĐ ${rev}; đã giới hạn về ${rev}.`);
+  const rec={id,name,cat:"-1",qty:vals[0],rev,loan:vals[2],straight:vals[3],install,check:"OCR bảng nhân viên"};
+  // Một ID chỉ lấy bản ghi cuối cùng, tránh cộng trùng khi OCR nhiều ảnh.
   byId.set(id,rec);
  }
  out.push(...byId.values());
@@ -117,7 +121,7 @@ async function processImages(){
  let fs=[...$("files").files];if(!fs.length)return alert("Chọn ảnh trước");if(!window.Tesseract)return alert("Tesseract chưa tải. Kiểm tra mạng.");
  $("run").disabled=true;let texts=[];
  try{for(let i=0;i<fs.length;i++){ $("status").textContent=`Đang OCR ảnh ${i+1}/${fs.length}: ${fs[i].name}`;let res=await Tesseract.recognize(fs[i],"vie+eng",{logger:m=>{if(m.status==="recognizing text"){$("progress").style.width=Math.round(((i+m.progress)/fs.length)*100)+"%";$("status").textContent=`OCR ảnh ${i+1}/${fs.length}: ${Math.round(m.progress*100)}%`}}});texts.push(`===== ẢNH ${i+1}: ${fs[i].name} =====\n${res.data.text}`)}
- $("ocr").value=texts.join("\n\n");let p=parseOCR($("ocr").value);rows=p.out;render();$("status").textContent=`OCR hoàn tất ${fs.length} ảnh; parser tạo ${rows.length} dòng. Hãy rà soát trước khi lưu.`;$("warnings").textContent=p.warn.join("\n")||"Đã phân tích. Các dòng OCR cần kiểm tra thủ công."; }
+ $("ocr").value=texts.join("\n\n");let p=parseOCR($("ocr").value);rows=p.out;localStorage.setItem(key(),JSON.stringify(rows));render();$("status").textContent=`OCR hoàn tất ${fs.length} ảnh; parser tạo ${rows.length} dòng. Hãy rà soát trước khi lưu.`;$("warnings").textContent=p.warn.join("\n")||"Đã phân tích. Các dòng OCR cần kiểm tra thủ công."; }
  catch(e){$("status").textContent="Lỗi OCR: "+e.message;alert("OCR lỗi: "+e.message)}
  finally{$("run").disabled=false}
 }
