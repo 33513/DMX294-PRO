@@ -84,7 +84,10 @@ function cleanNum(s){return Number(String(s||"").replace(/[^\d.-]/g,""))||0}
 // Parser: recognizes employee blocks by "name ... id: 123" and category lines followed by 4 numeric values.
 // Conservative: only accepts a category record when 4 numeric tokens are found on the same OCR line.
 function parseOCR(text){
- const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),out=[],warn=[];
+ const lines=text.split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean)
+  // Bỏ dòng phân trang/tổng kết, không phải dữ liệu nhân viên/ngành hàng
+  .filter(x=>!/^\\d+\\s*[-–/]\\s*\\d+\\s*\\/\\s*Tổng\\s*\\d+\\s*dòng/i.test(x)
+    && !/^Tổng\\s*\\d+\\s*dòng/i.test(x)),out=[],warn=[];
  const idRegex=/\bid\s*[:：]?\s*(\d{3,8})\b/i;
  const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Vi Đặng Nguyễn","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vi Linh","179512":"Phạm Văn Thuận","111566":"Nguyễn Nhật Minh"};
  const nums=s=>(s.replace(/\b[AO]\b/gi,"0").replace(/[|]/g,"1").match(/-?\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
