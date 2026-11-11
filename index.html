@@ -1,3 +1,4 @@
+```
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -52,28 +53,17 @@ table input{padding:7px 9px;border-radius:7px}
 @media(max-width:900px){main{padding:0 10px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}header{padding:18px}}
 @media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stat b{font-size:18px}.row input[type=date]{width:100%}header h2{font-size:23px}}
 
-/* Staff summary: keep columns readable on phones via horizontal scroll */
-#staffTable{min-width:820px;table-layout:fixed;white-space:nowrap}
-#staffTable th,#staffTable td{vertical-align:middle;padding:11px 10px;white-space:nowrap}
-#staffTable th:nth-child(1),#staffTable td:nth-child(1){width:82px}
-#staffTable th:nth-child(2),#staffTable td:nth-child(2){width:170px}
-#staffTable th:nth-child(3),#staffTable td:nth-child(3){width:115px}
-#staffTable th:nth-child(4),#staffTable td:nth-child(4){width:115px}
-#staffTable th:nth-child(5),#staffTable td:nth-child(5){width:100px}
-#staffTable th:nth-child(6),#staffTable td:nth-child(6){width:115px}
-#staffTable th:nth-child(7),#staffTable td:nth-child(7){width:145px}
-#staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:21px;font-weight:800}
-#staffTable td:nth-child(5){font-size:16px;font-weight:700}
-#staffTable td:nth-child(7){font-size:19px;font-weight:800}
-#staffTable .staff-ach-low{color:#ff5968!important;background:rgba(255,65,85,.16);border:1px solid rgba(255,65,85,.25);border-radius:8px;padding:7px 9px}
-#staffTable .staff-ach-high{color:#28dfa0!important;background:rgba(35,220,145,.15);border:1px solid rgba(35,220,145,.25);border-radius:8px;padding:7px 9px}
-#staffTable .staff-ach-na{color:#aabbd0}
-#staffTable input{width:100px!important;min-width:100px;font-size:16px!important}
+/* Mobile compact staff summary */
 @media(max-width:600px){
- #staffTable{min-width:820px;font-size:15px}
- #staffTable th,#staffTable td{padding:12px 10px}
- #staffTable td:nth-child(3),#staffTable td:nth-child(4){font-size:23px}
- #staffTable td:nth-child(7){font-size:20px}
+  #staffTable{table-layout:fixed;width:100%;white-space:normal;font-size:12px}
+  #staffTable th,#staffTable td{padding:8px 5px;white-space:normal;overflow-wrap:anywhere}
+  #staffTable th:nth-child(1),#staffTable td:nth-child(1){width:19%}
+  #staffTable th:nth-child(2),#staffTable td:nth-child(2){width:29%}
+  #staffTable th:nth-child(3),#staffTable td:nth-child(3){width:16%}
+  #staffTable th:nth-child(4),#staffTable td:nth-child(4){width:16%}
+  #staffTable th:nth-child(5),#staffTable td:nth-child(5){width:20%}
+  #staffTable input{width:100%!important;min-width:0;padding:5px 3px;font-size:11px}
+  #staffTable td:nth-child(1){font-size:10px}
 }
 </style>
 </head>
@@ -85,8 +75,8 @@ table input{padding:7px 9px;border-radius:7px}
 <div class="card"><h3>1. Chọn nhiều ảnh báo cáo</h3><div class="row"><input id="files" type="file" accept="image/*" multiple><button id="run" onclick="processImages()">OCR + Phân tích</button><button class="alt" onclick="clearAllOCR()">Xóa OCR</button></div><div id="status" class="note">Chọn ảnh theo thứ tự các trang báo cáo. OCR sẽ xử lý lần lượt.</div><div class="bar"><div id="progress"></div></div><textarea id="ocr" placeholder="Văn bản OCR tổng hợp..."></textarea><p class="note">Parser dựa vào ID nhân viên và mã ngành. Do OCR có thể đọc sai, hãy rà soát các dòng được đánh dấu.</p></div>
 <div class="stats"><div class="stat"><small>Doanh thu tổng</small><b id="total">0 triệu</b></div><div class="stat"><small>Target ngày</small><b id="targetDayDisplay">—</b></div><div class="stat"><small>% hoàn thành target</small><b id="totalAch">—</b></div><div class="stat"><small>Doanh thu trả góp</small><b id="installTotal">0 triệu</b></div><div class="stat"><small>% trả góp</small><b id="installPct">0.0%</b></div></div>
 <div class="card" style="display:none!important" aria-hidden="true"><h3>2. Dữ liệu đã phân tích (triệu đồng)</h3><div id="analyzedData"><table><tbody id="tbody"></tbody></table></div></div>
-<div class="card"><h3>3. Tổng hợp nhân viên (gom theo ID)</h3><div class="note">Mỗi ID chỉ hiển thị một dòng. Nhập TARGET cho từng nhân viên; tỷ trọng góp = doanh thu góp / doanh thu.</div><div class="scroll"><table id="staffTable"><thead><tr><th>ID</th><th>Tên nhân viên</th><th>Doanh thu</th><th>Doanh thu góp</th><th>Tỷ trọng góp</th><th>Target</th><th>% hoàn thành target</th></tr></thead><tbody id="staff"></tbody></table></div></div>
-<div class="card"><h3>4. Tổng hợp ngành hàng</h3><div class="scroll"><table><thead><tr><th>Mã</th><th>Ngành hàng</th><th>SL</th><th>DT</th><th>Trả thẳng</th><th>Trả góp</th></tr></thead><tbody id="cats"></tbody></table></div></div>
+<div class="card"><h3>3. Tổng hợp nhân viên (gom theo ID)</h3><div class="note">Mỗi ID chỉ hiển thị một dòng. Nhập TARGET cho từng nhân viên; tỷ trọng góp = doanh thu góp / doanh thu.</div><div class="scroll"><table id="staffTable"><thead><tr><th>ID</th><th>Tên</th><th>Doanh thu</th><th>Doanh thu góp</th><th>Tỷ trọng góp</th><th>Target</th><th>% hoàn thành target</th></tr></thead><tbody id="staff"></tbody></table></div></div>
+<div class="card" id="categoryCard" style="display:none"><h3>4. Tổng hợp ngành hàng</h3><div class="scroll"><table><thead><tr><th>Mã</th><th>Ngành hàng</th><th>SL</th><th>DT</th><th>Trả thẳng</th><th>Trả góp</th></tr></thead><tbody id="cats"></tbody></table></div></div>
 <div class="card"><h3>5. Cảnh báo / kiểm tra</h3><div id="warnings" class="note">Chưa phân tích dữ liệu.</div></div>
 <p class="note">Dữ liệu lưu trên trình duyệt này (localStorage), chưa đồng bộ giữa các máy.</p>
 </main>
@@ -107,44 +97,44 @@ function cleanNum(s){return Number(String(s||"").replace(/[^\d.-]/g,""))||0}
 // Parser: recognizes employee blocks by "name ... id: 123" and category lines followed by 4 numeric values.
 // Conservative: only accepts a category record when 4 numeric tokens are found on the same OCR line.
 function parseOCR(text){
- const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),out=[],warn=[];
- let emp=null;
- const idRegex=/\bid\s*[:：]?\s*(\d{3,8})\b/i;
- const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Vi Đặng Nguyễn","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vi Linh","179512":"Phạm Văn Thuận"};
- const catRegex=/(?:^|[+\-•]\s*|\s)(-1|10|11|[1-9])\s*[-–]\s*/;
- const isHeader=s=>/NHÓM HÀNG|SỐ DOANH|DT TRẢ|LƯỢNG|DOANH THU|ẢNH \d|Đơn vị|Target ngày|DT thực|DT dự kiến/i.test(s);
- const numTokens=s=>{
-  // OCR hay đọc số 0 thành chữ O/A; chỉ sửa ký tự đứng riêng trong phần số liệu
-  s=s.replace(/\b[AO]\b/gi,"0").replace(/[|]/g,"1");
-  return (s.match(/-?\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
- };
+ const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)
+  .filter(x=>!/^\d+\s*[-–/]\s*\d+\s*\/\s*Tổng\s*\d+\s*dòng/i.test(x)&&!/^Tổng\s*\d+\s*dòng/i.test(x));
+ const out=[],warn=[],idRegex=/\bid\s*[:：]?\s*(\d{3,8})\b/i;
+ const employeeNames={"18868":"Nguyễn Thị Lý","33513":"Đặng Nguyễn Vũ Vi","71995":"Đặng Thị Thảo Trinh","258196":"Lê Xuân Hải","168190":"Nguyễn Văn Ngoan","171730":"Nguyễn Minh-Mai Trâm","281312":"Nguyễn Công Toàn","56283":"Trần Vũ Linh","179512":"Phạm Văn Thuận","111566":"Nguyễn Nhật Minh"};
+ const nums=s=>(s.replace(/\b[AO]\b/gi,"0").replace(/[|]/g,"1").match(/\d+(?:[.,]\d+)?/g)||[]).map(cleanNum);
+ const byId=new Map();
  for(let i=0;i<lines.length;i++){
-  const line=lines[i],idmatch=line.match(idRegex);
-  if(idmatch){emp={id:idmatch[1],name:employeeNames[idmatch[1]]||"NV "+idmatch[1]};continue}
-  if(!emp||isHeader(line))continue;
-  const cm=line.match(catRegex);if(!cm)continue;
-  const code=cm[1];let tail=line.slice(cm.index+cm[0].length);
-  // remove any repeated category number/name noise; collect the 4 numeric columns
-  let vals=numTokens(tail);
-  for(let j=i+1;j<Math.min(lines.length,i+7)&&vals.length<4;j++){
-   const nxt=lines[j];
-   if(idRegex.test(nxt)||catRegex.test(nxt)||isHeader(nxt))break;
-   // Don't collect standalone prose or table labels as numbers
-   vals=vals.concat(numTokens(nxt));
+  const m=lines[i].match(idRegex);if(!m)continue;const id=m[1];
+  // Numeric employee row is immediately above ID; never combine columns from other lines.
+  let vals=[],rowIndex=i-1;
+  for(let j=i-1;j>=Math.max(0,i-3);j--){
+   if(idRegex.test(lines[j]))break;
+   const n=nums(lines[j]);
+   if(n.length>=5){vals=n.slice(-5);rowIndex=j;break}
+   if(j<i-1&&lines[j].startsWith("+"))break;
   }
-  if(vals.length>=4){
-   const v=vals.slice(0,4);
-   out.push({id:emp.id,name:emp.name,cat:code,qty:v[0],rev:v[1],straight:v[2],install:v[3],check:"OCR - rà soát"});
-  }else warn.push(`Dòng ${i+1}: ngành ${code} chỉ nhận ${vals.length}/4 số: "${line}"`);
+  if(vals.length!==5){warn.push(`ID ${id}: không nhận đủ 5 cột số ngay trước ID.`);continue}
+  const name=employeeNames[id]||"NV "+id;
+  // Exact report columns: SL, DTQĐ, DT khoản vay, DT trả thẳng QĐ, DT trả góp QĐ
+  const rev=vals[1], rawInstall=vals[4];
+  // DT trả góp không thể lớn hơn DT quy đổi của cùng nhân viên; chặn số OCR lệch cột.
+  const install=Math.min(rawInstall,rev);
+  if(rawInstall>rev)warn.push(`ID ${id}: OCR trả góp ${rawInstall} vượt DTQĐ ${rev}; đã giới hạn về ${rev}.`);
+  const rec={id,name,cat:"-1",qty:vals[0],rev,loan:vals[2],straight:vals[3],install,check:"OCR bảng nhân viên"};
+  // Một ID chỉ lấy bản ghi cuối cùng, tránh cộng trùng khi OCR nhiều ảnh.
+  byId.set(id,rec);
  }
- if(!out.length)warn.push("Không nhận diện được dòng ngành hàng. Cần kiểm tra OCR.");
+ out.push(...byId.values());
+ // Luôn hiển thị Trần Vũ Linh (ID 56283), kể cả OCR không bắt được dòng doanh thu.
+ if(!byId.has("56283"))out.push({id:"56283",name:"Trần Vũ Linh",cat:"-1",qty:0,rev:0,loan:0,straight:0,install:0,check:"Không nhận được dòng OCR"});
+ if(!out.length)warn.push("Không nhận diện được bảng nhân viên. Kiểm tra OCR có dòng id: XXXXX.");
  return {out,warn};
 }
 async function processImages(){
  let fs=[...$("files").files];if(!fs.length)return alert("Chọn ảnh trước");if(!window.Tesseract)return alert("Tesseract chưa tải. Kiểm tra mạng.");
  $("run").disabled=true;let texts=[];
  try{for(let i=0;i<fs.length;i++){ $("status").textContent=`Đang OCR ảnh ${i+1}/${fs.length}: ${fs[i].name}`;let res=await Tesseract.recognize(fs[i],"vie+eng",{logger:m=>{if(m.status==="recognizing text"){$("progress").style.width=Math.round(((i+m.progress)/fs.length)*100)+"%";$("status").textContent=`OCR ảnh ${i+1}/${fs.length}: ${Math.round(m.progress*100)}%`}}});texts.push(`===== ẢNH ${i+1}: ${fs[i].name} =====\n${res.data.text}`)}
- $("ocr").value=texts.join("\n\n");let p=parseOCR($("ocr").value);rows=p.out;render();$("status").textContent=`OCR hoàn tất ${fs.length} ảnh; parser tạo ${rows.length} dòng. Hãy rà soát trước khi lưu.`;$("warnings").textContent=p.warn.join("\n")||"Đã phân tích. Các dòng OCR cần kiểm tra thủ công."; }
+ $("ocr").value=texts.join("\n\n");let p=parseOCR($("ocr").value);rows=p.out;localStorage.setItem(key(),JSON.stringify(rows));render();$("status").textContent=`OCR hoàn tất ${fs.length} ảnh; parser tạo ${rows.length} dòng. Hãy rà soát trước khi lưu.`;$("warnings").textContent=p.warn.join("\n")||"Đã phân tích. Các dòng OCR cần kiểm tra thủ công."; }
  catch(e){$("status").textContent="Lỗi OCR: "+e.message;alert("OCR lỗi: "+e.message)}
  finally{$("run").disabled=false}
 }
@@ -165,17 +155,16 @@ function render(){ $("tbody").innerHTML=rows.map((r,i)=>`<tr>
 <td><button class="red" onclick="removeRow(${i})">X</button></td></tr>`).join("");renderSummary()}
 function setTarget(k,v){targets[k]=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}
 function setTotalTarget(v){targets[key()+'_TOTAL']=Number(v||0);localStorage.setItem('dmx294_targets',JSON.stringify(targets));renderSummary()}
-function renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+r.name);if(!st[id])st[id]={id:r.id,name:r.name,qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>st[id][k]+=Number(r[k]||0));let c=r.cat||"-1";if(!ca[c])ca[c]={qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>ca[c][k]+=Number(r[k]||0))});
+function renderSummary(){let st={},ca={};rows.forEach(r=>{let id=r.id||("noid-"+r.name);if(!st[id])st[id]={id:r.id,name:r.name,qty:0,rev:0,loan:0,straight:0,install:0};["qty","rev","loan","straight","install"].forEach(k=>st[id][k]+=Number(r[k]||0));let c=r.cat||"-1";if(!ca[c])ca[c]={qty:0,rev:0,straight:0,install:0};["qty","rev","straight","install"].forEach(k=>ca[c][k]+=Number(r[k]||0))});
 let total=rows.reduce((a,r)=>a+Number(r.rev||0),0),q=rows.reduce((a,r)=>a+Number(r.qty||0),0),installTotal=rows.reduce((a,r)=>a+Number(r.install||0),0);
 $("total").textContent=fmt(total)+" triệu";$("installTotal").textContent=fmt(installTotal)+" triệu";$("installPct").textContent=(total?100*installTotal/total:0).toFixed(1)+"%";
 const ranked=Object.values(st).sort((a,b)=>b.rev-a.rev||String(a.id).localeCompare(String(b.id)));
-const totalTar=Number(targets[key()+'_TOTAL']||0);
-const storeAch=totalTar?100*total/(totalTar/1000000):0;
-$("staff").innerHTML=ranked.map(s=>{
+$("staff").innerHTML=ranked.map((s,index)=>{
  const tk=key()+"_"+s.id,tar=Number(targets[tk]||0),share=s.rev?100*s.install/s.rev:0,ach=tar?100*s.rev/tar:0;
- const achClass=!tar?"staff-ach-na":ach<storeAch?"staff-ach-low":"staff-ach-high";
- return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td><span class="${achClass}">${tar?ach.toFixed(1)+"%":"—"}</span></td></tr>`
+ const rank=index+1,medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank;
+ return `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td><b>${fmt(s.rev)}</b></td><td>${fmt(s.install)}</td><td>${share.toFixed(1)}%</td><td><input type="number" min="0" step="0.1" style="width:90px" value="${tar}" onchange="setTarget('${esc(tk)}',this.value)"></td><td>${tar?ach.toFixed(1)+"%":"—"}</td></tr>`
  }).join("");
+const totalTar=Number(targets[key()+'_TOTAL']||0);
 $("totalTarget").value=totalTar||"";
 $("targetTotalText").textContent=totalTar?"Target: "+fmt(totalTar/1000000)+" triệu":"";
 $("targetDayDisplay").textContent=totalTar?fmt(totalTar/1000000)+" triệu":"—";
@@ -184,3 +173,4 @@ $("totalAch").textContent=totalTar?(100*total/(totalTar/1000000)).toFixed(1)+"%"
 $("cats").innerHTML=Object.entries(ca).map(([k,v])=>`<tr><td>${k}</td><td>${CAT[k]||k}</td><td>${fmt(v.qty)}</td><td>${fmt(v.rev)}</td><td>${fmt(v.straight)}</td><td>${fmt(v.install)}</td></tr>`).join("")}
 $("store").addEventListener("change",load);$("date").addEventListener("change",load);init();
 </script></body></html>
+```
