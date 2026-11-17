@@ -1,490 +1,141 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f5f7fb">
-<title>DMX294 PRO • LUXURY Dashboard</title>
-<style>
-:root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#eaf1ff 0,transparent 32%),radial-gradient(circle at 95% 10%,#fff4df 0,transparent 25%),var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-.wrap{max-width:1440px;margin:auto;padding:22px clamp(14px,3vw,36px) 44px}
-header{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}
-.brand{display:flex;align-items:center;gap:12px}.mark{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#1d4ed8,#60a5fa);display:grid;place-items:center;color:#fff;font-weight:900;box-shadow:0 8px 20px #2563eb35}.brand h1{font-size:clamp(18px,2.4vw,25px);margin:0;letter-spacing:-.6px}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
-.header-right{display:flex;align-items:center;gap:10px}.live{display:flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid #bce8d7;background:#effcf6;border-radius:99px;color:#087b55;font-size:12px;font-weight:700}.dot{width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 0 4px #10b98120}.stamp{color:var(--muted);font-size:12px}
-nav{display:flex;gap:8px;overflow:auto;padding:0 0 16px;scrollbar-width:none}nav a{white-space:nowrap;text-decoration:none;color:#64748b;background:#fff;border:1px solid var(--line);padding:9px 14px;border-radius:99px;font-weight:650;font-size:13px}nav a:first-child{background:#eff5ff;color:#1d4ed8;border-color:#cfe0ff}
-section{margin:20px 0 28px;scroll-margin-top:16px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:13px}.eyebrow{font-size:10px;letter-spacing:1.7px;text-transform:uppercase;color:var(--gold);font-weight:800}.section-head h2{margin:3px 0 0;font-size:clamp(18px,2vw,23px);letter-spacing:-.5px}.section-head p{margin:0;color:var(--muted);font-size:12px}
-.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px}.kpi{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff,#fbfcff);border:1px solid #e6eaf2;border-radius:19px;padding:17px 17px 15px;box-shadow:var(--shadow);min-height:145px}.kpi:after{content:"";position:absolute;right:-30px;top:-40px;width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#dbeafe66,#fff0)}.k-label{font-size:12px;color:#68768d;font-weight:700;display:flex;align-items:center;gap:8px}.ico{width:27px;height:27px;border-radius:9px;background:#edf4ff;color:#2563eb;display:grid;place-items:center;font-size:14px}.k-value{font-size:clamp(24px,3vw,34px);font-weight:850;letter-spacing:-1.2px;margin:13px 0 5px;line-height:1.1}.k-foot{font-size:11px;color:#8b97aa}.kpi.gold .ico{background:#fbf5e9;color:#b58a35}.kpi.green .ico{background:#e9fbf3;color:#059669}.kpi.red .ico{background:#fff0f0;color:#dc2626}
-.panel{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}.panel-top{padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line)}.panel-top h3{margin:0;font-size:15px}.pill{font-size:11px;padding:5px 9px;border-radius:99px;background:#eff5ff;color:#2563eb;font-weight:750}
-.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.formbox{padding:17px}.formbox label{display:block;font-size:12px;color:#64748b;font-weight:700;margin-bottom:7px}.formbox input{width:100%;padding:12px;border:1px solid #dce3ee;border-radius:12px;background:#fbfcff;color:var(--ink);font:inherit;outline:none}.formbox input:focus{border-color:#93b4ff;box-shadow:0 0 0 3px #2563eb12}.formbox small{display:block;color:#9aa5b6;margin-top:6px;font-size:11px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;background:linear-gradient(135deg,#2563eb,#4f8df8);color:#fff;font-weight:750;padding:11px 16px;border-radius:12px;box-shadow:0 8px 18px #2563eb25;cursor:pointer}.btn.secondary{background:#fff;color:#52627b;border:1px solid var(--line);box-shadow:none}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
-.table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px;font-size:13px}th{background:#f8faff;color:#68768d;font-size:11px;letter-spacing:.35px;text-align:left;padding:13px 14px;white-space:nowrap;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1}td{padding:13px 14px;border-bottom:1px solid #edf0f5;white-space:nowrap}tbody tr:hover{background:#f9fbff}td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:650}.user{font-size:11px;color:#8a96aa}.name{font-weight:750}.percent{font-weight:850}.positive{color:var(--green)}.negative{color:var(--red)}.neutral{color:#64748b}.bar{height:6px;background:#edf1f7;border-radius:99px;overflow:hidden;margin-top:6px;min-width:70px}.bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#60a5fa,#2563eb)}
-.race-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.race-panel{min-width:0}.race-table{min-width:0;width:100%;table-layout:fixed;font-size:10px}.race-table th{padding:7px 4px;font-size:9px;letter-spacing:0}.race-table td{padding:7px 4px;white-space:normal;overflow-wrap:anywhere}.race-table td:last-child{text-align:right;white-space:nowrap}.race-table .name{font-size:10px;line-height:1.25}.empty{padding:26px;text-align:center;color:#9aa5b6;font-size:13px}.footnote{font-size:11px;color:#8b97aa;padding:12px 16px}
-@media(max-width:1050px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:1050px){.race-columns{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}}\n@media(max-width:700px){.race-columns{grid-template-columns:1fr}.race-table{font-size:12px}.race-table th{font-size:10px;padding:9px 7px}.race-table td{padding:9px 7px}.race-table .name{font-size:12px}}\n@media(max-width:650px){.wrap{padding:14px 12px 30px}header{align-items:flex-start}.brand h1{font-size:18px}.stamp{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.kpi{padding:13px;min-height:126px;border-radius:16px}.k-value{font-size:27px}.k-label{font-size:11px}.k-foot{font-size:10px}.data-grid{grid-template-columns:1fr}.section-head p{display:none}.panel{border-radius:16px}.panel-top{padding:14px}.form-row{grid-template-columns:1fr 1fr}.table-wrap{margin:0}.section-head h2{font-size:19px}}
+/**
+ * DMX294 Luxury Dashboard — Apps Script Backend V4
+ * V4 fixes response transport: postMessage to TOP window (GitHub page).
+ * HTML calls OCR one image per POST. Do not send all five images in one call.
+ *
+ * Script Properties: GEMINI_API_KEY (required), DMX294_TOKEN (optional),
+ * DMX294_SHEET_ID (optional; used by existing save/load storage).
+ * Deploy: Execute as Me; Who has access: Anyone.
+ */
+const CFG = {MODEL:'gemini-3.8-flash', DATA_TAB:'DMX294_DATA', MAX_IMAGE_BYTES:5*1024*1024, MAX_IMAGES:1};
 
-/* DMX294 PRO — visual refresh based on the approved reference. No count-up animation. */
-:root{--bg:#f3f6fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e5eaf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 8px 24px rgba(28,48,89,.055)}
-body{background:#f3f6fb}
-.wrap{max-width:1380px;padding:18px clamp(14px,2.4vw,30px) 36px}
-header{margin-bottom:13px}
-.brand .mark{border-radius:13px;width:42px;height:42px}
-.brand h1{font-size:22px;letter-spacing:-.45px}
-.brand p{font-size:10px;letter-spacing:.45px}
-nav{position:sticky;top:0;z-index:20;background:rgba(243,246,251,.94);backdrop-filter:blur(12px);padding:8px 0 13px;gap:7px}
-nav a{padding:8px 14px;border-radius:999px;font-size:12px;box-shadow:0 2px 8px rgba(28,48,89,.035)}
-section{margin:13px 0 19px;scroll-margin-top:68px}
-.eyebrow{font-size:9px;letter-spacing:1.35px}
-.section-head{margin-bottom:9px}
-.section-head h2{font-size:clamp(17px,1.8vw,21px)}
-.kpis{gap:10px}
-.kpi{min-height:112px;padding:13px 14px;border-radius:15px;box-shadow:0 5px 16px rgba(28,48,89,.045)}
-.k-label{font-size:11px;gap:7px}
-.ico{width:23px;height:23px;border-radius:7px}
-.k-value{font-size:clamp(23px,2.6vw,31px);margin:9px 0 4px;letter-spacing:-.7px}
-.k-foot{font-size:10px}
-.panel{border-radius:15px;box-shadow:0 5px 18px rgba(28,48,89,.045)}
-.panel-top{padding:12px 15px}
-.panel-top h3{font-size:13px}
-th{padding:10px 12px;font-size:10px}
-td{padding:10px 12px;font-size:12px}
-.race-columns{gap:10px}
-.race-table th{font-size:9px;padding:7px 5px}
-.race-table td{font-size:10px;padding:7px 5px}
-.data-grid{gap:11px}
-.formbox{padding:14px}
-.formbox input{padding:10px;border-radius:10px}
-.btn{padding:9px 13px;border-radius:10px;font-size:12px}
-.footnote{font-size:10px;padding:9px 13px}
-/* Prevent any visual number tweening: values change only when render() receives data. */
-.k-value,.num,.percent,.bar span{transition:none!important;animation:none!important}
-@media(max-width:650px){
- .wrap{padding:12px 10px 26px}
- header{align-items:center}
- .brand h1{font-size:18px}
- .brand p{font-size:8px;max-width:245px}
- .header-right .live{font-size:9px;padding:6px 8px}
- nav{margin:0 -2px}
- nav a{padding:7px 11px;font-size:11px}
- .kpis{gap:8px}
- .kpi{min-height:105px;padding:11px;border-radius:13px}
- .k-value{font-size:24px}
- .section-head h2{font-size:17px}
-}
-
-
-/* V2 — match the supplied compact reference layout, including narrow screens.
-   This is a presentation-only patch: no OCR, data, mapping, or calculation code changed. */
-.kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.kpi{min-width:0;min-height:96px;padding:10px 9px;border-radius:12px}
-.k-label{font-size:10px;gap:5px;line-height:1.2}
-.ico{width:19px;height:19px;font-size:11px;flex:0 0 19px}
-.k-value{font-size:clamp(17px,2vw,27px);margin:8px 0 3px;letter-spacing:-.45px;overflow-wrap:anywhere}
-.k-foot{font-size:9px;line-height:1.2}
-.race-columns{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-.race-panel .panel-top{padding:8px 7px;gap:4px}
-.race-panel .panel-top h3{font-size:10px;line-height:1.2}
-.race-panel .pill{font-size:8px;padding:3px 5px}
-.race-table{min-width:0;width:100%;table-layout:fixed;font-size:8px}
-.race-table th{font-size:7px;padding:6px 3px;white-space:normal;line-height:1.15}
-.race-table td{font-size:8px;padding:6px 3px;line-height:1.2;overflow-wrap:anywhere}
-.race-table td:first-child{width:48%}
-.race-table td:nth-child(2),.race-table td:nth-child(3){width:17%}
-.race-table td:last-child{width:18%;white-space:normal}
-.data-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.data-grid>.panel:last-child{grid-column:1/-1}
-.formbox{padding:10px}
-.formbox label{font-size:10px;line-height:1.25}
-.formbox input{padding:8px;font-size:11px;min-width:0}
-.formbox small{font-size:9px;line-height:1.35}
-.actions{gap:6px;margin-top:9px}
-.btn{padding:7px 9px;font-size:10px}
-.panel{border-radius:12px}
-.panel-top{padding:9px 10px}
-.panel-top h3{font-size:11px}
-section{margin:10px 0 14px}
-.section-head{margin-bottom:7px}
-.section-head h2{font-size:clamp(13px,1.7vw,18px)}
-.eyebrow{font-size:8px;letter-spacing:1px}
-nav{gap:5px;padding:6px 0 9px}
-nav a{font-size:9px;padding:6px 9px}
-.table-wrap table{min-width:680px}
-#staff .table-wrap{overflow-x:auto}
-#staff table{min-width:680px;font-size:9px}
-#staff th{font-size:8px;padding:7px 5px}
-#staff td{font-size:9px;padding:7px 5px}
-#staff .footnote,.footnote{font-size:8px;padding:7px 9px}
-@media(max-width:700px){
- .wrap{padding:9px 8px 20px}
- header{margin-bottom:5px}
- .brand .mark{width:30px;height:30px;border-radius:9px;font-size:13px}
- .brand h1{font-size:15px}
- .brand p{font-size:7px;letter-spacing:0}
- .header-right .live{font-size:7px;padding:4px 6px}
- .stamp{display:none}
- nav{position:sticky;top:0;z-index:20;margin:0;background:rgba(243,246,251,.96)}
- nav a{font-size:8px;padding:5px 7px}
- .kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
- .kpi{min-height:82px;padding:7px 5px;border-radius:9px}
- .k-label{font-size:7px;gap:3px}
- .ico{width:14px;height:14px;flex-basis:14px;font-size:8px;border-radius:4px}
- .k-value{font-size:clamp(12px,3.5vw,17px);margin:6px 0 2px}
- .k-foot{font-size:6px}
- .race-columns{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
- .race-panel .panel-top{padding:6px 4px}
- .race-panel .panel-top h3{font-size:8px}
- .race-panel .pill{font-size:6px;padding:2px 3px}
- .race-table th{font-size:6px;padding:4px 2px}
- .race-table td{font-size:6px;padding:4px 2px}
- .data-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
- .formbox{padding:7px}
- .formbox label{font-size:8px}
- .formbox input{font-size:9px;padding:6px}
- .formbox small{font-size:7px}
- .btn{font-size:8px;padding:6px 7px}
- .section-head h2{font-size:13px}
- .eyebrow{font-size:7px}
- .section-head p{display:block;font-size:7px}
- .panel-top h3{font-size:9px}
- #staff table{min-width:600px}
-}
-
-</style>
-</head>
-<body>
-<div class="wrap">
-<header>
- <div class="brand"><div class="mark">D</div><div><h1>DMX 294 <span style="color:#2563eb">PRO</span></h1><p>SALES INTELLIGENCE DASHBOARD • OCR BÁO CÁO • PHÂN TÍCH DOANH THU</p></div></div>
- <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">Prototype • 11/11/2026</span></div>
-</header>
-<nav><a href="#overview">Tổng quan</a><a href="#staff">Nhân viên</a><a href="#race">Thi đua</a><a href="#settings">Data & Target</a></nav>
-<section id="overview">
- <div class="section-head"><div><div class="eyebrow">Executive overview</div><h2>01. Tổng quan doanh thu realtime</h2></div><p>Đơn vị: triệu đồng</p></div>
- <div class="kpis">
-  <div class="kpi"><div class="k-label"><span class="ico">₫</span> DThu QĐ tổng</div><div class="k-value" id="total">—</div><div class="k-foot">Doanh thu quy đổi</div></div>
-  <div class="kpi gold"><div class="k-label"><span class="ico">◎</span> Target ngày</div><div class="k-value" id="target">190</div><div class="k-foot">Mục tiêu doanh thu QĐ</div></div>
-  <div class="kpi green"><div class="k-label"><span class="ico">↗</span> % HT Target</div><div class="k-value" id="completion">—</div><div class="k-foot">Tổng thực hiện / Target</div></div>
-  <div class="kpi"><div class="k-label"><span class="ico">▤</span> DThu trả góp</div><div class="k-value" id="installment">—</div><div class="k-foot">Doanh thu góp quy đổi</div></div>
-  <div class="kpi red"><div class="k-label"><span class="ico">％</span> % trả góp</div><div class="k-value" id="share">—</div><div class="k-foot">Trả góp / DThu QĐ tổng</div></div>
- </div>
-</section>
-<section id="staff">
- <div class="section-head"><div><div class="eyebrow">People performance</div><h2>02. Doanh thu nhân viên realtime</h2></div><p>Màu hoàn thành so với KPI cửa hàng</p></div>
- <div class="panel"><div class="panel-top"><h3>Hiệu suất đội ngũ</h3><span class="pill" id="staffcount">3 nhân viên</span></div>
- <div class="table-wrap"><table><thead><tr><th>USER</th><th>TÊN NV</th><th style="text-align:right">DTHU QĐ</th><th style="text-align:right">DTHU GÓP</th><th style="text-align:right">TỶ TRỌNG GÓP</th><th style="text-align:right">TARGET NGÀY</th><th>% HT TARGET</th></tr></thead><tbody id="staffbody"></tbody></table></div>
- <div class="footnote">Xanh: % nhân viên cao hơn KPI tổng • Đỏ: thấp hơn KPI tổng.</div></div>
-</section>
-<section id="race">
- <div class="section-head"><div><div class="eyebrow">Category leaderboard</div><h2>03. Thi đua realtime</h2></div><p>Tiến độ từng chương trình</p></div>
- <div class="race-columns">
-  <div class="panel race-panel"><div class="panel-top"><h3>CE • Điện máy</h3><span class="pill">13 CT</span></div><div class="table-wrap" style="overflow-x:hidden"><table class="race-table"><thead><tr><th>CHƯƠNG TRÌNH</th><th>THỰC HIỆN</th><th>TARGET</th><th>% HT</th></tr></thead><tbody id="raceCE"></tbody></table></div></div>
-  <div class="panel race-panel"><div class="panel-top"><h3>DV • Dịch vụ</h3><span class="pill">13 CT</span></div><div class="table-wrap" style="overflow-x:hidden"><table class="race-table"><thead><tr><th>CHƯƠNG TRÌNH</th><th>THỰC HIỆN</th><th>TARGET</th><th>% HT</th></tr></thead><tbody id="raceDV"></tbody></table></div></div>
-  <div class="panel race-panel"><div class="panel-top"><h3>ICT • Công nghệ</h3><span class="pill">13 CT</span></div><div class="table-wrap" style="overflow-x:hidden"><table class="race-table"><thead><tr><th>CHƯƠNG TRÌNH</th><th>THỰC HIỆN</th><th>TARGET</th><th>% HT</th></tr></thead><tbody id="raceICT"></tbody></table></div></div>
- </div>
- <div class="footnote">Mỗi nhóm hiển thị riêng và sắp xếp % hoàn thành Target giảm dần.</div>
-</section>
-<section id="settings">
- <div class="section-head"><div><div class="eyebrow">Configuration</div><h2>Data & Target</h2></div><p>Nhập mục tiêu để map KPI</p></div>
- <div class="data-grid">
-  <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
-  <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">Gemini OCR API V4 • sửa phản hồi</span></div><div class="formbox">
-<label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
-<small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
-<div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
-<div class="actions"><button class="btn" onclick="runOCR()">Phân tích OCR ảnh</button><button class="btn secondary" onclick="clearOCR()">Xóa ảnh</button></div>
-<div id="ocrStatus" style="font-size:12px;color:#64748b;margin-top:10px"></div>
-<div id="mappingStatus" style="padding:12px;border:1px solid #dbe3ef;border-radius:12px;margin-top:10px;font-size:12px">DATA OCR: Chưa chạy. Chọn ảnh báo cáo để hệ thống trích xuất.</div><div id="ocrText" style="display:none"></div><div id="ocrResult" style="margin-top:12px"></div><small>Ảnh được tăng độ phân giải và tương phản trước khi OCR. Dòng không đủ dữ kiện sẽ giữ nguyên, không tự điền 0.</small></div></div>
- </div>
-</section>
-<div style="text-align:center;color:#a0aabd;font-size:11px;padding:20px 0">DMX LUXURY ANALYTICS • UI PROTOTYPE • LIGHT MODE</div>
-</div>
-<script>
-const STAFF_MASTER=[
- {user:"258196",name:"Lê Xuân Hải"},{user:"281312",name:"Nguyễn Công Toàn"},
- {user:"18868",name:"Nguyễn Thị Lý"},{user:"168190",name:"Nguyễn Văn Ngoan"},
- {user:"171730",name:"Nguyễn Minh Mai Trâm"},{user:"56283",name:"Trần Vũ Linh"},
- {user:"179512",name:"Phạm Văn Thuận"}
-];
-let staff=STAFF_MASTER.map(x=>({...x,sales:null,gift:null,target:null}));
-let races=[];
-let storeSalesQd=null, storeInstallmentQd=null, storeTarget=null, staffTargetDefault=25;
-const raceGroups={
- CE:["Điện tử Samsung","Tivi TCL","CE LG","Máy Lạnh","Máy lọc KK - Hút bụi - Hút ẩm","Máy lọc nước","Máy nước nóng","Nồi cơm & Nồi chiên","Quạt gió","Điện tử","Máy giặt","Tủ Lạnh / Đông / Mát","Máy sấy / Máy rửa chén"],
- DV:["Bảo hiểm Thợ ĐMX","Bảo hiểm Thợ ICT","Mở thẻ tín dụng VPBANK MWG và TPBANK EVO","Vay tiền mặt","Trả chậm Homecredit","Bảo hiểm Tổng","Ví trả sau","Nạp rút","Trả Chậm Điện máy & Gia dụng","VAS","Sim","Trả chậm FECREDIT, SAMSUNG F+, SHINHAN, MCREDIT","Sim ĐMX"],
- ICT:["Đèn năng lượng mặt trời","Điện thoại Realme","Điện thoại Vivo","Đồng hồ & Smartwatch","Laptop","Loa Phụ Kiện","Phụ kiện công nghệ","Sạc dự phòng","Tai nghe","ĐIỆN THOẠI & TABLET ANDROID","Camera","Phụ kiện khác IT & Nhóm khác","Cáp sạc"]
-};
-function renderRaceGroup(group,id){
- const rows=races.filter(x=>(x[4]===group)||(!x[4]&&raceGroups[group].includes(x[0]))).sort((a,b)=>(b[3]??pct(b[1],b[2]))-(a[3]??pct(a[1],a[2])));
- document.getElementById(id).innerHTML=rows.map(x=>{let p=x[3]??((x[1]==null||x[2]==null)?null:pct(x[1],x[2])),c=p==null?"neutral":p>=100?"positive":"negative";return `<tr><td class="name">${esc(x[0])}</td><td class="num">${x[1]==null?"—":fmt(x[1])}</td><td class="num">${x[2]==null?"—":fmt(x[2])}</td><td class="num percent ${c}">${p==null?"—":p.toFixed(1)+"%"}</td></tr>`}).join("");
-}
-
-function fmt(n){return Number(n).toLocaleString("vi-VN",{maximumFractionDigits:2})}
-function pct(a,b){return b>0?a/b*100:0}
-function render(){
- const total=storeSalesQd, gift=storeInstallmentQd, base=(total==null||storeTarget==null||storeTarget<=0)?null:pct(total,storeTarget);
- document.getElementById("total").textContent=total==null?"—":fmt(total);
- document.getElementById("target").textContent=storeTarget==null?"—":fmt(storeTarget);
- document.getElementById("completion").textContent=base==null?"—":base.toFixed(1)+"%";
- document.getElementById("installment").textContent=gift==null?"—":fmt(gift);
- document.getElementById("share").textContent=(gift==null||total==null||total===0)?"—":pct(gift,total).toFixed(1)+"%";
-  renderRaceGroup("CE","raceCE");renderRaceGroup("DV","raceDV");renderRaceGroup("ICT","raceICT");
- document.getElementById("staffcount").textContent=staff.length+" nhân viên";
- ["CE","DV","ICT"].forEach(g=>{const el=document.getElementById("count"+g);if(el)el.textContent=races.filter(x=>raceGroups[g].includes(x[0])).length+" CT"});
- document.getElementById("staffbody").innerHTML=[...staff].sort((a,b)=>b.sales-a.sales).map(x=>{
-  let target=x.target??(x.sales>0?staffTargetDefault:0), done=(x.sales==null||target<=0||base==null)?null:pct(x.sales,target), share=(x.gift==null||x.sales==null||x.sales===0)?null:pct(x.gift,x.sales), cls=done==null?"neutral":done>base?"positive":done<base?"negative":"neutral";
-  return `<tr><td class="user">${x.user}</td><td class="name">${x.name}</td><td class="num">${x.sales==null?"—":fmt(x.sales)}</td><td class="num">${x.gift==null?"—":fmt(x.gift)}</td><td class="num">${share==null?"—":share.toFixed(1)+"%"}</td><td class="num">${target>0?fmt(target):"—"}</td><td><span class="percent ${target>0?cls:"neutral"}">${done==null?"—":done.toFixed(1)+"%"}</span><div class="bar"><span style="width:${done==null?0:Math.min(done,100)}%"></span></div></td></tr>`
- }).join("");
-}
-function applyTarget(){const v=Number(document.getElementById("targetInput").value);if(!Number.isFinite(v)||v<=0){alert("Target phải lớn hơn 0");return}storeTarget=v;persistDashboard();render()}
-function applyStaffTarget(){let t=Number(document.getElementById("staffTargetInput").value);if(!Number.isFinite(t)||t<0){alert("Vui lòng nhập Target nhân viên hợp lệ.");return}staffTargetDefault=t;staff.forEach(x=>{if(x.sales>0)x.target=t});persistDashboard();render()}
-function resetTargets(){if(!confirm("Xóa toàn bộ dữ liệu đã OCR và target?"))return;localStorage.removeItem("DMX294_DATA_V17_FIX");staff=[];races=[];storeSalesQd=storeInstallmentQd=storeTarget=null;render()}
-// FIX missing utilities in original file
-function normalizeText(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
-function parseVNNumber(v){let s=String(v??"").trim().replace(/[^\d.,-]/g,"");if(!s)return NaN;if(s.includes(",")&&s.includes("."))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");else if((s.match(/\./g)||[]).length>1)s=s.replace(/\./g,"");else if(/\.\d{3}$/.test(s))s=s.replace(/\./g,"");return Number(s)}
-function esc(s){return String(s??"").replace(/[&<>\"']/g,c=>{if(c==="&")return "&amp;";if(c==="<")return "&lt;";if(c===">")return "&gt;";if(c==='\"')return "&quot;";return "&#39;"})}
-function setMappingStatus(msg,ok){const e=document.getElementById("mappingStatus");if(!e)return;e.textContent=(ok?"✓ ":"⚠ ")+String(msg);e.style.background=ok?"#f0fdf4":"#fff7ed";e.style.borderColor=ok?"#bbf7d0":"#fed7aa";e.style.color=ok?"#166534":"#9a3412"}
-function persistDashboard(){try{localStorage.setItem("DMX294_DATA_V17_FIX",JSON.stringify({staff,races,storeSalesQd,storeInstallmentQd,storeTarget,staffTargetDefault,updatedAt:new Date().toISOString()}))}catch(e){console.warn(e)}}
-function restoreDashboard(){try{const d=JSON.parse(localStorage.getItem("DMX294_DATA_V17_FIX")||"null");if(!d)return;if(Array.isArray(d.staff)){
- const saved=new Map(d.staff.map(x=>[String(x.user),x]));
- staff=STAFF_MASTER.map(m=>{const x=saved.get(m.user)||{};return {...m,sales:x.sales??null,gift:x.gift??null,target:x.target??null}});
-}races=Array.isArray(d.races)?d.races:[];storeSalesQd=d.storeSalesQd??null;storeInstallmentQd=d.storeInstallmentQd??null;storeTarget=d.storeTarget??null;staffTargetDefault=d.staffTargetDefault??25}catch(e){console.warn(e)}}
-restoreDashboard();document.getElementById("targetInput").value=storeTarget??"";document.getElementById("staffTargetInput").value=staffTargetDefault;render();
-const reportInput=document.getElementById("reportImage");window.runOCR=runOCR;window.clearOCR=clearOCR;
-reportInput.addEventListener("change",()=>{const box=document.getElementById("imagePreview");box.innerHTML="";[...reportInput.files].forEach(f=>{const im=document.createElement("img");im.src=URL.createObjectURL(f);im.alt=f.name;im.style.cssText="max-width:150px;max-height:110px;object-fit:contain;border:1px solid #e7ebf2;border-radius:10px;padding:4px";box.appendChild(im)});document.getElementById("ocrStatus").textContent=reportInput.files.length+" ảnh đã chọn."});
-function preprocessImage(file,scale=2){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve(c)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error("Không đọc được ảnh"))};img.src=url})}
-const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase();
-function nval(s){let z=String(s||"").replace(/[^0-9.,-]/g,"");if(!z)return null;if(z.includes(".")&&z.includes(","))z=z.replace(/\./g,"").replace(",",".");else if(z.includes(","))z=z.replace(",",".");return Number(z)}
-function groupWords(words){const ws=(words||[]).filter(w=>w.text&&w.bbox&&w.confidence>15).map(w=>({t:w.text.trim(),x:(w.bbox.x0+w.bbox.x1)/2,y:(w.bbox.y0+w.bbox.y1)/2,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0,y1:w.bbox.y1}));ws.sort((a,b)=>a.y-b.y||a.x-b.x);let rows=[];for(const w of ws){let r=rows.find(r=>Math.abs(r.y-w.y)<Math.max(12,(w.y1-w.y0)*.6));if(!r){r={y:w.y,words:[]};rows.push(r)}r.words.push(w);r.y=r.words.reduce((a,b)=>a+b.y,0)/r.words.length}return rows.sort((a,b)=>a.y-b.y).map(r=>({...r,words:r.words.sort((a,b)=>a.x-b.x),text:r.words.map(w=>w.t).join(" ")}))}
-function parseStore(text,words,imageWidth,imageHeight){
- const W=imageWidth||2640,H=imageHeight||3224;
- const center=w=>({x:((w.bbox.x0+w.bbox.x1)/2)/W,y:((w.bbox.y0+w.bbox.y1)/2)/H,t:String(w.text||"").trim(),conf:Number(w.confidence||0)});
- const all=(words||[]).map(center).filter(w=>w.t&&Number.isFinite(w.x)&&Number.isFinite(w.y));
- const numeric=all.filter(w=>/^-?\d+(?:[.,]\d+)?$/.test(w.t)).map(w=>({...w,v:nval(w.t)})).filter(w=>Number.isFinite(w.v));
- const t=norm(text).replace(/\s+/g," ");
- // Target ngày lấy từ nhãn KPI, ưu tiên regex có ngữ cảnh thay vì lấy số bất kỳ.
- let target=null;
- const mt=t.match(/target\s*ngay\s*(?:\D{0,12})?(\d+(?:[.,]\d+)?)/);
- if(mt)target=nval(mt[1]);
- // DT quy đổi là KPI đầu tiên (ô trên-trái). Tìm số trong vùng card, tránh vùng target và dự kiến ngày.
- let salesCandidates=numeric.filter(w=>w.x>=.015&&w.x<.47&&w.y>=.045&&w.y<.235);
- // loại số nhỏ kiểu icon/nhãn và chọn số nằm dưới nhãn DT quy đổi (thường ở hàng giá trị KPI)
- salesCandidates=salesCandidates.filter(w=>w.v>=0&&w.v<1000000);
- let sales=null;
- if(salesCandidates.length){
-   // KPI value nằm thấp hơn nhãn trong ô đầu tiên; số có confidence tốt và gần vùng trung tâm card.
-   salesCandidates.sort((a,b)=> (Math.abs(a.y-.105)*2+Math.abs(a.x-.12))-(Math.abs(b.y-.105)*2+Math.abs(b.x-.12)) || b.conf-a.conf);
-   sales=salesCandidates[0].v;
- }
- // Fallback có ngữ cảnh OCR: số ngay sau cụm DT quy đổi; chỉ dùng khi tọa độ không tìm thấy.
- if(sales==null){const m=t.match(/dt\s*quy\s*doi\s*(\d+(?:[.,]\d+)?)/);if(m)sales=nval(m[1]);}
- // DT trả góp trong card cuối: số đầu của dạng x/y; không suy diễn nếu không có.
- let gift=null;
- const giftCandidates=all.filter(w=>w.x>.55&&w.x<.98&&w.y>.68&&w.y<.95&&/\d+\s*\/\s*\d+/.test(w.t));
- if(giftCandidates.length){const m=giftCandidates.sort((a,b)=>a.y-b.y)[0].t.match(/(\d+(?:[.,]\d+)?)\s*\//);if(m)gift=nval(m[1]);}
- return {sales,target,gift};
-}
-function parseStaff(rows,imageWidth){
- // Mapping theo USER cố định: dùng vị trí Y của USER làm neo, gom các số
- // trên cùng hàng (kể cả OCR tách thành nhiều line gần nhau). Không OCR tên NV.
- const out=[], anchors=[];
- const masterIds=new Set(STAFF_MASTER.map(m=>m.user));
- const all=[];
- for(const row of rows)for(const w of (row.words||[]))all.push({...w,ry:row.y});
- for(const w of all){const t=String(w.t||'').trim();if(/^\d{4,7}$/.test(t)&&masterIds.has(t))anchors.push({id:t,y:w.y,x:w.x})}
- anchors.sort((a,b)=>a.y-b.y);
- const unique=[];for(const a of anchors){if(!unique.some(x=>x.id===a.id&&Math.abs(x.y-a.y)<8))unique.push(a)}
- for(let i=0;i<unique.length;i++){
-  const a=unique[i],next=unique[i+1],y0=a.y-18,y1=next?((a.y+next.y)/2):a.y+42;
-  // lấy token số ở phía bên phải USER, nằm trong dải hàng của nhân viên đó
-  const cells=all.filter(w=>w.x>a.x+20&&w.y>=y0&&w.y<y1&&/^[\d.,]+$/.test(String(w.t||'').trim()))
-   .sort((u,v)=>u.y-v.y||u.x-v.x);
-  const nums=[];for(const w of cells){const v=nval(w.t);if(Number.isFinite(v)&&!nums.some(n=>Math.abs(n.y-w.y)<8&&Math.abs(n.x-w.x)<10))nums.push({v,y:w.y,x:w.x})}
-  nums.sort((u,v)=>u.x-v.x);
-  if(!nums.length)continue;
-  const m=STAFF_MASTER.find(x=>x.user===a.id);if(!m)continue;
-  out.push({user:a.id,name:m.name,sales:nums[0].v,gift:nums.length>1?nums[1].v:null,target:staffTargetDefault});
- }
- return out;
-}
-function parseRace(rows,imageWidth){
- const out=[];
- const headers=/chuong trinh|thuc hien|target|% ht|% hoan thanh/i;
- for(const row of rows){
-   const words=(row.words||[]).slice().sort((a,b)=>a.x-b.x);
-   const text=norm(words.map(w=>w.t).join(" "));
-   if(headers.test(text))continue;
-   // Ignore rows without a program label or numeric cells.
-   const firstNum=words.findIndex(w=>nval(w.t)!=null);
-   if(firstNum<1)continue;
-   const name=words.slice(0,firstNum).map(w=>w.t).join(" ").replace(/[+|]/g," ").trim();
-   if(!name||name.length<2)continue;
-   const vals=words.slice(firstNum).map(w=>nval(w.t)).filter(v=>v!=null);
-   if(!vals.length)continue;
-   // Typical table columns: Thực hiện, Target, %HT. Keep all observed values,
-   // percent from last numeric cell (often OCR splits '%' from number).
-   const actual=vals.length>=2?vals[0]:null;
-   const target=vals.length>=2?vals[1]:null;
-   const pct=vals.length>=3?vals[vals.length-1]:null;
-   out.push({name,actual,target,pct});
- }
- return out;
-}
-const GEMINI_OCR_API = "https://script.google.com/macros/s/AKfycbxls0JmAiGNlaDruDdQ4QttVhh1VBAywrJYMgudKeT6pU2sYiBgAAj3v7Rzo0B97VBx/exec";
-// API Apps Script đang dùng action "ocr"; dữ liệu ảnh truyền base64, không chạy Tesseract trên trình duyệt.
-function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>{const v=String(r.result||'');resolve(v.substring(v.indexOf(',')+1))};r.onerror=()=>reject(Error('Không đọc được file '+file.name));r.readAsDataURL(file)})}
-// Nén ảnh báo cáo trước khi gửi Gemini: giới hạn cạnh dài 2200px, JPEG chất lượng 0.88.
-async function compressReportImage(file){
- const url=URL.createObjectURL(file);
+function doPost(e){
+ let reqId='';
  try{
-  const img=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error('Không mở được ảnh '+file.name));im.src=url});
-  const maxSide=2200,scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
-  const w=Math.max(1,Math.round(img.naturalWidth*scale)),hgt=Math.max(1,Math.round(img.naturalHeight*scale));
-  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=hgt;
-  const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,w,hgt);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,w,hgt);
-  const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Không nén được ảnh '+file.name)),'image/jpeg',0.88));
-  const data=await fileToBase64(blob);
-  return {name:file.name,mimeType:'image/jpeg',data,originalBytes:file.size,compressedBytes:blob.size,width:w,height:hgt};
- }finally{URL.revokeObjectURL(url)}
-}
-
-function numberOrNull(v){if(v===null||v===undefined||v===''||!Number.isFinite(Number(v)))return null;return Number(v)}
-function applyGeminiReports(reports){
- let notes=[],staffById=new Map(STAFF_MASTER.map(m=>[m.user,{...m,sales:null,gift:null,target:null}])),programMap=new Map();
- let store=null;
- for(const r of reports||[]){
-  if(r.reportType==='store'&&r.store){store=r.store;notes.push('Tổng siêu thị');}
-  if(r.reportType==='staff'){
-   (r.staff||[]).forEach(x=>{const id=String(x.userId||'');if(!staffById.has(id)){notes.push('USER ID lạ '+id);return;}const old=staffById.get(id);staffById.set(id,{...old,sales:numberOrNull(x.salesQd),gift:numberOrNull(x.installmentQd),target:staffTargetDefault});});notes.push('Nhân viên '+(r.staff||[]).length+' dòng');
-  }
-  ['CE','DV','ICT'].forEach(g=>(r.programs||[]).filter(x=>x.group===g).forEach(x=>{const k=g+'|'+normalizeText(x.name);programMap.set(k,{group:g,name:String(x.name||''),actual:numberOrNull(x.actual),target:numberOrNull(x.target),percent:numberOrNull(x.percent)});}));
-  (r.warnings||[]).forEach(w=>notes.push('Gemini: '+w));
+  const raw=(e&&e.parameter&&e.parameter.payload)||'';
+  if(!raw)throw new Error('Thiếu payload trong POST.');
+  const req=JSON.parse(raw);
+  reqId=String(req.requestId||req.__dmx294||'');
+  checkToken_(req);
+  const action=String(req.action||'').toLowerCase();
+  let data;
+  if(action==='ocr')data=ocr_(req);
+  else if(action==='save')data=save_(req.data||{});
+  else if(action==='load')data=load_();
+  else throw new Error('Action không hợp lệ: '+action);
+  return htmlReply_({__dmx294:reqId,data:data});
+ }catch(err){
+  console.error('DMX294 doPost ['+reqId+']: '+(err&&err.stack||err));
+  return htmlReply_({__dmx294:reqId,error:String(err&&err.message||err)});
  }
- if(store){storeSalesQd=numberOrNull(store.salesQd);storeInstallmentQd=numberOrNull(store.installmentQd);if(store.targetDay!=null){storeTarget=numberOrNull(store.targetDay);document.getElementById('targetInput').value=storeTarget??'';}notes.push('KPI tổng đã nhận');}
- staff=STAFF_MASTER.map(m=>staffById.get(m.user));
- races=[...programMap.values()].map(x=>[x.name,x.actual,x.target,x.percent,x.group]);
- persistDashboard();render();return notes;
 }
-// Transport form + iframe: tránh lỗi CORS/redirect "Failed to fetch" của Apps Script.
-let dmxApiSeq=0;
-async function apiCall(action,payload={}){
- const token=document.getElementById('apiTokenInput')?.value?.trim()||'';
- const id='dmx294_'+(++dmxApiSeq)+'_'+Date.now();
- const iframe=document.createElement('iframe');iframe.name=id;iframe.title='DMX294 API response';iframe.style.display='none';
- const form=document.createElement('form');form.method='POST';form.action=GEMINI_OCR_API;form.target=id;form.style.display='none';
- const input=document.createElement('input');input.type='hidden';input.name='payload';
- input.value=JSON.stringify({action,token,requestId:id,...payload});form.appendChild(input);
- document.body.append(iframe,form);
- let settled=false;
- try{
-  const data=await new Promise((resolve,reject)=>{
-   const timer=setTimeout(()=>finish(reject,Error('Không nhận được phản hồi Apps Script sau 180 giây. Kiểm tra Executions và URL triển khai.')),180000);
-   function cleanup(){clearTimeout(timer);window.removeEventListener('message',onMessage);form.remove();iframe.remove()}
-   function finish(fn,value){if(settled)return;settled=true;cleanup();fn(value)}
-   function onMessage(ev){const m=ev.data;if(!m||typeof m!=='object'||m.__dmx294!==id)return;finish(m.error?reject:resolve,m.error?Error(m.error):m.data)}
-   window.addEventListener('message',onMessage);
-   form.submit();
-  });
-  if(!data||data.ok===false)throw Error(data?.error||'Apps Script trả phản hồi không hợp lệ');
-  return data;
- }catch(e){if(!settled){settled=true;form.remove();iframe.remove()}throw e}
+function doGet(){
+ return HtmlService.createHtmlOutput('<!doctype html><meta charset="utf-8"><h2>DMX294 Backend V4 hoạt động</h2><p>POST action=load để kiểm tra.</p>');
 }
-function validatePreview(reports){
- const staffIds=new Set(),programs=new Set(),warnings=[],pending=[];
- let hasStore=false,hasStaffReport=false,hasRaceReport=false;
- (reports||[]).forEach(r=>{
-  const type=String(r.reportType||'unknown').toLowerCase();
-  if(type==='store'&&r.store)hasStore=true;
-  if(type==='staff')hasStaffReport=true;
-  if(type==='race')hasRaceReport=true;
-  if(type==='unknown')warnings.push('Không phân loại được loại báo cáo của ảnh '+(r.sourceImage||''));
-  (r.staff||[]).forEach(x=>{
-   const id=String(x.userId||'');
-   if(!id){warnings.push('Có dòng nhân viên thiếu USER ID.');return;}
-   if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);
-   if(staffIds.has(id))warnings.push('USER ID trùng: '+id);
-   staffIds.add(id);
-  });
-  (r.programs||[]).forEach(x=>{
-   const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;
-   if(!name){warnings.push('Có chương trình thiếu tên.');return;}
-   if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);
-   programs.add(key);
-   if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
-  });
+/* Send the response to every ancestor frame.
+   Apps Script may serve the HtmlService response inside one or more Google
+   wrapper frames after redirect. The GitHub page listens for the request id. */
+function htmlReply_(obj){
+ const json=JSON.stringify(obj)
+  .replace(/</g,'\\u003c')
+  .replace(/>/g,'\\u003e')
+  .replace(/&/g,'\\u0026')
+  .replace(/\u2028/g,'\\u2028')
+  .replace(/\u2029/g,'\\u2029');
+ const page='<!doctype html><html><head><meta charset="utf-8"></head><body><script>'+
+ '(function(){'+
+ 'var message='+json+';'+
+ 'var current=window;'+
+ 'for(var level=0;level<12;level++){'+
+ ' try{if(current.parent===current)break;current.parent.postMessage(message,"*");current=current.parent;}'+
+ ' catch(e){break;}'+
+ '}'+
+ 'try{if(window.opener)window.opener.postMessage(message,"*");}catch(e){}'+
+ '})();'+
+ '<\/script></body></html>';
+ return HtmlService.createHtmlOutput(page)
+  .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+function checkToken_(req){
+ const expected=PropertiesService.getScriptProperties().getProperty('DMX294_TOKEN');
+ if(expected&&String(req.token||'')!==expected)throw new Error('TOKEN không đúng.');
+}
+function apiKey_(){
+ const k=PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+ if(!k)throw new Error('Thiếu GEMINI_API_KEY trong Script Properties.');
+ return k;
+}
+function ocr_(req){
+ const imgs=Array.isArray(req.images)?req.images:[];
+ if(imgs.length!==1)throw new Error('Backend V4 nhận đúng 1 ảnh mỗi yêu cầu.');
+ const img=imgs[0]||{},b64=String(img.data||'');
+ if(!b64)throw new Error('Ảnh không có dữ liệu base64.');
+ const bytes=Utilities.base64Decode(b64);
+ if(bytes.length>CFG.MAX_IMAGE_BYTES)throw new Error('Ảnh quá 5 MB sau khi nén.');
+ const mime=/^image\/(jpeg|png|webp|heic)$/i.test(img.mimeType||'')?img.mimeType:'image/jpeg';
+ const prompt=promptForImage_(img.name||'report-image');
+ const payload={contents:[{role:'user',parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
+ const url='https://generativelanguage.googleapis.com/v1beta/models/'+CFG.MODEL+':generateContent?key='+encodeURIComponent(apiKey_());
+ let res,code,body;
+ for(let attempt=0;attempt<3;attempt++){
+  res=UrlFetchApp.fetch(url,{method:'post',contentType:'application/json',payload:JSON.stringify(payload),muteHttpExceptions:true});
+  code=res.getResponseCode();body=res.getContentText();
+  if(code!==429&&code!==500&&code!==502&&code!==503&&code!==504)break;
+  if(attempt<2)Utilities.sleep(1000*Math.pow(2,attempt));
+ }
+ if(code<200||code>=300)throw new Error('Gemini HTTP '+code+': '+String(body||'').slice(0,700));
+ let obj;try{obj=JSON.parse(body)}catch(e){throw new Error('Gemini trả phản hồi không phải JSON hợp lệ.')}
+ const text=(obj.candidates&&obj.candidates[0]&&obj.candidates[0].content&&obj.candidates[0].content.parts||[]).map(p=>p.text||'').join('');
+ if(!text){const reason=obj.promptFeedback&&obj.promptFeedback.blockReason;throw new Error('Gemini không trả nội dung'+(reason?' (block: '+reason+')':'')+'.')}
+ let report;try{report=JSON.parse(text.replace(/^```json\s*/i,'').replace(/```$/,'').trim())}catch(e){throw new Error('JSON OCR không hợp lệ: '+text.slice(0,350))}
+ report.sourceImage=img.name||'report-image';report.index=1;
+ return {ok:true,images:[report]};
+}
+function promptForImage_(name){
+ return `Bạn là bộ OCR báo cáo doanh thu Điện Máy Xanh. Đọc CHÍNH XÁC ảnh tên ${name}.
+Không suy đoán, không tự điền số; không đọc được thì null và ghi warnings. Trả JSON hợp lệ, không markdown.
+Phân loại reportType: store (tổng siêu thị), staff (bảng nhân viên), race (bảng thi đua CE/DV/ICT), unknown.
+Số tiền hiển thị theo triệu đồng; giữ số decimal như ảnh. USER ID là chuỗi số.
+Schema:
+{"reportType":"store|staff|race|unknown","store":{"salesQd":number|null,"installmentQd":number|null,"targetDay":number|null},"staff":[{"userId":"string","name":"string","salesQd":number|null,"installmentQd":number|null}],"programs":[{"group":"CE|DV|ICT","name":"tên đúng như bảng","actual":number|null,"target":number|null,"percent":number|null}],"warnings":["..."]}
+Với ảnh store chỉ điền store; ảnh staff chỉ điền staff; ảnh race chỉ điền programs. Không tạo hàng không có trong ảnh.
+Nhân viên chuẩn: 258196 Lê Xuân Hải; 281312 Nguyễn Công Toàn; 18868 Nguyễn Thị Lý; 168190 Nguyễn Văn Ngoan; 171730 Nguyễn Minh Mai Trâm; 56283 Trần Vũ Linh; 179512 Phạm Văn Thuận.
+Danh mục chương trình chuẩn (nếu nhận diện được thì dùng tên chuẩn):
+CE: Điện tử Samsung; Tivi TCL; CE LG; Máy Lạnh; Máy lọc KK - Hút bụi - Hút ẩm; Máy lọc nước; Máy nước nóng; Nồi cơm & Nồi chiên; Quạt gió; Điện tử; Máy giặt; Tủ Lạnh / Đông / Mát; Máy sấy / Máy rửa chén.
+DV: Bảo hiểm Thợ ĐMX; Bảo hiểm Thợ ICT; Mở thẻ tín dụng VPBANK MWG và TPBANK EVO; Vay tiền mặt; Trả chậm Homecredit; Bảo hiểm Tổng; Ví trả sau; Nạp rút; Trả Chậm Điện máy & Gia dụng; VAS; Sim; Trả chậm FECREDIT, SAMSUNG F+, SHINHAN, MCREDIT; Sim ĐMX.
+ICT: Đèn năng lượng mặt trời; Điện thoại Realme; Điện thoại Vivo; Đồng hồ & Smartwatch; Laptop; Loa Phụ Kiện; Phụ kiện công nghệ; Sạc dự phòng; Tai nghe; ĐIỆN THOẠI & TABLET ANDROID; Camera; Phụ kiện khác IT & Nhóm khác; Cáp sạc.`;
+}
+function spreadsheet_(){
+ const props=PropertiesService.getScriptProperties(),id=props.getProperty('DMX294_SHEET_ID');
+ const ss=id?SpreadsheetApp.openById(id):SpreadsheetApp.create('DMX294 Luxury Dashboard Data');
+ if(!id)props.setProperty('DMX294_SHEET_ID',ss.getId());
+ let sh=ss.getSheetByName(CFG.DATA_TAB);if(!sh)sh=ss.insertSheet(CFG.DATA_TAB);return sh;
+}
+function save_(data){
+ if(data.confirmed!==true)throw new Error('Chỉ lưu khi preview đã xác nhận.');
+ if(!Array.isArray(data.reports)||!data.reports.length)throw new Error('Không có reports để lưu.');
+ const reports=data.reports,check=validate_(reports);
+ if(!check.ok)throw new Error('Dữ liệu chưa đạt: '+check.errors.join(' | '));
+ const savedAt=new Date().toISOString(),payload={reports:reports,savedAt:savedAt,version:1};
+ const lock=LockService.getScriptLock();lock.waitLock(15000);
+ try{const sh=spreadsheet_();sh.clearContents();sh.getRange(1,1,1,3).setValues([['savedAt','json','version']]);sh.getRange(2,1,1,3).setValues([[savedAt,JSON.stringify(payload),1]]);sh.hideSheet()}
+ finally{lock.releaseLock()}
+ return {ok:true,savedAt:savedAt,validated:check};
+}
+function load_(){
+ const sh=spreadsheet_();if(sh.getLastRow()<2)return {ok:true,data:null};
+ const json=sh.getRange(2,2).getValue();if(!json)return {ok:true,data:null};return {ok:true,data:JSON.parse(json)};
+}
+function validate_(reports){
+ const errors=[],ids=new Set(),progs=new Set(),counts={CE:0,DV:0,ICT:0};let hasStore=false;
+ reports.forEach(r=>{
+  if(r.reportType==='store'&&r.store)hasStore=true;
+  (r.staff||[]).forEach(s=>{const id=String(s.userId||'');if(!id)errors.push('Thiếu USER ID');if(ids.has(id))errors.push('USER ID trùng '+id);ids.add(id)});
+  (r.programs||[]).forEach(p=>{const g=String(p.group||'').toUpperCase(),n=norm_(p.name);if(!Object.prototype.hasOwnProperty.call(counts,g))errors.push('Nhóm không hợp lệ '+g);else counts[g]++;const k=g+'|'+n;if(progs.has(k))errors.push('Chương trình trùng '+p.name);progs.add(k)});
  });
- const counts={CE:0,DV:0,ICT:0};
- (reports||[]).forEach(r=>(r.programs||[]).forEach(x=>{
-  const g=String(x.group||'').toUpperCase();
-  if(counts[g]!==undefined)counts[g]++;
- }));
-
- // Chỉ kiểm tra đủ nhân viên khi đã có ảnh báo cáo nhân viên.
- // Chỉ kiểm tra đủ 39 chương trình khi đã có ít nhất một ảnh thi đua.
- if(!hasStore)pending.push('Chưa có ảnh báo cáo tổng quan cửa hàng.');
- if(!hasStaffReport)pending.push('Đang chờ ảnh báo cáo nhân viên; chưa kiểm tra 7 nhân viên.');
- else{
-  const missingStaff=STAFF_MASTER.filter(x=>!staffIds.has(x.user));
-  missingStaff.forEach(x=>warnings.push('Thiếu nhân viên '+x.user+' '+x.name));
-  if(staffIds.size!==7)warnings.push('Báo cáo nhân viên mới nhận diện '+staffIds.size+'/7 người.');
- }
- if(!hasRaceReport)pending.push('Đang chờ ảnh báo cáo thi đua CE/DV/ICT; chưa kiểm tra 39 chương trình.');
- else{
-  Object.keys(counts).forEach(g=>{
-   if(counts[g]!==13)warnings.push('Nhóm '+g+' mới nhận diện '+counts[g]+'/13 chương trình.');
-  });
- }
- const complete=hasStore&&hasStaffReport&&hasRaceReport;
- return {
-  staffCount:staffIds.size,programCounts:counts,warnings,pending,
-  hasStore,hasStaffReport,hasRaceReport,
-  ok:complete&&staffIds.size===7&&Object.values(counts).every(x=>x===13)&&warnings.length===0
- };
+ ['258196','281312','18868','168190','171730','56283','179512'].forEach(id=>{if(!ids.has(id))errors.push('Thiếu nhân viên '+id)});
+ ['CE','DV','ICT'].forEach(g=>{if(counts[g]!==13)errors.push(g+' có '+counts[g]+'/13 chương trình')});
+ if(!hasStore)errors.push('Thiếu báo cáo tổng siêu thị.');
+ return {ok:errors.length===0,errors:errors,staffCount:ids.size,programCounts:counts};
 }
-async function runOCR(){
- const fs=Array.from(reportInput.files||[]);
- if(!fs.length){alert('Vui lòng chọn 1–5 ảnh báo cáo.');return}
- if(fs.length>5){alert('API chỉ nhận tối đa 5 ảnh mỗi lượt.');return}
- const st=document.getElementById('ocrStatus'),btn=document.querySelector('button[onclick="runOCR()"]');
- if(btn){btn.disabled=true;btn.textContent='Đang xử lý ảnh…'}
- const allReports=[],imageStats=[];
- try{
-  for(let i=0;i<fs.length;i++){
-   st.textContent=`Đang nén ảnh ${i+1}/${fs.length}…`;
-   const compressed=await compressReportImage(fs[i]);
-   imageStats.push({name:compressed.name,originalKB:Math.round(compressed.originalBytes/1024),compressedKB:Math.round(compressed.compressedBytes/1024),width:compressed.width,height:compressed.height});
-   st.textContent=`Đang gửi Gemini ảnh ${i+1}/${fs.length} (${imageStats[i].compressedKB} KB)…`;
-   // Mỗi ảnh là một yêu cầu Apps Script riêng để tránh một request 5 ảnh vượt giới hạn 180 giây.
-   const data=await apiCall('ocr',{images:[{name:compressed.name,mimeType:compressed.mimeType,data:compressed.data}]});
-   if(!Array.isArray(data.images)||data.images.length!==1)throw Error('Gemini không trả đúng kết quả cho ảnh '+(i+1));
-   allReports.push(data.images[0]);
-   st.textContent=`Gemini đã đọc ${i+1}/${fs.length} ảnh. Đang chuẩn bị ảnh tiếp theo…`;
-  }
-  const data={ok:true,images:allReports,imageStats};
-  const v=validatePreview(data.images);
-  const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW GEMINI OCR — CHƯA LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${x.originalKB} KB → ${x.compressedKB} KB`).join(' • ')}</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Chưa đủ/đang có lỗi mapping. Dashboard giữ nguyên, không lưu.</p>'}</div>`;
-  document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
-  document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
-   const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
-   try{
-    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images}});
-    applyGeminiReports(data.images);
-    const loaded=await apiCall('load');
-    if(loaded.data?.reports)applyGeminiReports(loaded.data.reports);
-    st.textContent='Đã xác nhận và lưu backend • '+saved.savedAt;
-    setMappingStatus('Đã lưu '+v.staffCount+'/7 nhân viên và 39/39 chương trình.',true);
-    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Backend Apps Script và dashboard đã cập nhật.</p></div>';
-   }catch(e){cb.disabled=false;cb.textContent='Xác nhận & lưu dữ liệu';alert('Không lưu được: '+e.message)}
-  });
-  document.getElementById('cancelOCRBtn')?.addEventListener('click',()=>{preview.innerHTML='';setMappingStatus('Đã hủy preview; dữ liệu cũ giữ nguyên.',false)});
-  st.textContent=`Hoàn tất OCR ${fs.length}/${fs.length} ảnh • Chưa lưu`;
-  setMappingStatus(v.ok?'Preview đủ điều kiện xác nhận. Dashboard chưa thay đổi.':(v.pending.length?'OCR ảnh hiện tại hoàn tất; đang chờ các ảnh báo cáo còn lại.':'Preview chưa đạt; dashboard giữ nguyên.'),v.ok);
- }catch(e){
-  st.textContent='OCR bị gián đoạn: '+(e.message||e);
-  setMappingStatus('OCR lỗi; dashboard cũ được giữ nguyên. '+(e.message||e),false);
-  document.getElementById('ocrResult').innerHTML=`<div class="panel" style="padding:12px;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa"><b>Không hoàn tất OCR.</b><p>${esc(e.message||String(e))}</p><p>Ảnh gốc vẫn còn trong trình duyệt. Chạy lại sẽ bắt đầu lại từ ảnh đầu.</p></div>`;
- }finally{if(btn){btn.disabled=false;btn.textContent='Phân tích OCR ảnh'}}
-}
-function clearOCR(){reportInput.value="";document.getElementById("imagePreview").innerHTML="";document.getElementById("ocrText").textContent="";document.getElementById("ocrResult").innerHTML="";document.getElementById("ocrStatus").textContent="Đã xóa ảnh";setMappingStatus("DATA OCR: Chưa chạy.",false)}
-</script>
-</body></html>
+function norm_(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
