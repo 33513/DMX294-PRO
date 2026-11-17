@@ -187,7 +187,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">Gemini OCR API V10</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">Gemini OCR API V4 • sửa phản hồi</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -369,23 +369,24 @@ let dmxApiSeq=0;
 async function apiCall(action,payload={}){
  const token=document.getElementById('apiTokenInput')?.value?.trim()||'';
  const id='dmx294_'+(++dmxApiSeq)+'_'+Date.now();
- const iframe=document.createElement('iframe');iframe.name=id;iframe.style.display='none';
+ const iframe=document.createElement('iframe');iframe.name=id;iframe.title='DMX294 API response';iframe.style.display='none';
  const form=document.createElement('form');form.method='POST';form.action=GEMINI_OCR_API;form.target=id;form.style.display='none';
  const input=document.createElement('input');input.type='hidden';input.name='payload';
  input.value=JSON.stringify({action,token,requestId:id,...payload});form.appendChild(input);
  document.body.append(iframe,form);
+ let settled=false;
  try{
   const data=await new Promise((resolve,reject)=>{
-   const timer=setTimeout(()=>{cleanup();reject(Error('Apps Script quá thời gian chờ 180 giây.'))},180000);
+   const timer=setTimeout(()=>finish(reject,Error('Không nhận được phản hồi Apps Script sau 180 giây. Kiểm tra Executions và URL triển khai.')),180000);
    function cleanup(){clearTimeout(timer);window.removeEventListener('message',onMessage);form.remove();iframe.remove()}
-   function onMessage(ev){const m=ev.data;if(!m||m.__dmx294!==id)return;cleanup();if(m.error)reject(Error(m.error));else resolve(m.data)}
+   function finish(fn,value){if(settled)return;settled=true;cleanup();fn(value)}
+   function onMessage(ev){const m=ev.data;if(!m||typeof m!=='object'||m.__dmx294!==id)return;finish(m.error?reject:resolve,m.error?Error(m.error):m.data)}
    window.addEventListener('message',onMessage);
-   iframe.addEventListener('load',()=>{});
    form.submit();
   });
   if(!data||data.ok===false)throw Error(data?.error||'Apps Script trả phản hồi không hợp lệ');
   return data;
- }catch(e){form.remove();iframe.remove();throw e}
+ }catch(e){if(!settled){settled=true;form.remove();iframe.remove()}throw e}
 }
 function validatePreview(reports){
  const staffIds=new Set(),programs=new Set(),warnings=[];let hasStore=false;
