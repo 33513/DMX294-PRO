@@ -389,18 +389,56 @@ async function apiCall(action,payload={}){
  }catch(e){if(!settled){settled=true;form.remove();iframe.remove()}throw e}
 }
 function validatePreview(reports){
- const staffIds=new Set(),programs=new Set(),warnings=[];let hasStore=false;
+ const staffIds=new Set(),programs=new Set(),warnings=[],pending=[];
+ let hasStore=false,hasStaffReport=false,hasRaceReport=false;
  (reports||[]).forEach(r=>{
-  if(r.reportType==='store'&&r.store)hasStore=true;
-  (r.staff||[]).forEach(x=>{const id=String(x.userId||'');if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);if(staffIds.has(id))warnings.push('USER ID trùng: '+id);staffIds.add(id)});
-  (r.programs||[]).forEach(x=>{const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);programs.add(key);if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g)});
+  const type=String(r.reportType||'unknown').toLowerCase();
+  if(type==='store'&&r.store)hasStore=true;
+  if(type==='staff')hasStaffReport=true;
+  if(type==='race')hasRaceReport=true;
+  if(type==='unknown')warnings.push('Không phân loại được loại báo cáo của ảnh '+(r.sourceImage||''));
+  (r.staff||[]).forEach(x=>{
+   const id=String(x.userId||'');
+   if(!id){warnings.push('Có dòng nhân viên thiếu USER ID.');return;}
+   if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);
+   if(staffIds.has(id))warnings.push('USER ID trùng: '+id);
+   staffIds.add(id);
+  });
+  (r.programs||[]).forEach(x=>{
+   const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;
+   if(!name){warnings.push('Có chương trình thiếu tên.');return;}
+   if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);
+   programs.add(key);
+   if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
+  });
  });
- const missingStaff=STAFF_MASTER.filter(x=>!staffIds.has(x.user));
- const counts={CE:0,DV:0,ICT:0};reports.forEach(r=>(r.programs||[]).forEach(x=>{if(counts[String(x.group||'').toUpperCase()]!==undefined)counts[String(x.group).toUpperCase()]++}));
- missingStaff.forEach(x=>warnings.push('Thiếu nhân viên '+x.user+' '+x.name));
- if(!hasStore)warnings.push('Thiếu báo cáo tổng siêu thị.');
- Object.keys(counts).forEach(g=>{if(counts[g]!==13)warnings.push('Thiếu/chưa đủ chương trình '+g+': '+counts[g]+'/13')});
- return {staffCount:staffIds.size,programCounts:counts,warnings,ok:staffIds.size===7&&hasStore&&Object.values(counts).every(x=>x===13)&&warnings.length===0};
+ const counts={CE:0,DV:0,ICT:0};
+ (reports||[]).forEach(r=>(r.programs||[]).forEach(x=>{
+  const g=String(x.group||'').toUpperCase();
+  if(counts[g]!==undefined)counts[g]++;
+ }));
+
+ // Chỉ kiểm tra đủ nhân viên khi đã có ảnh báo cáo nhân viên.
+ // Chỉ kiểm tra đủ 39 chương trình khi đã có ít nhất một ảnh thi đua.
+ if(!hasStore)pending.push('Chưa có ảnh báo cáo tổng quan cửa hàng.');
+ if(!hasStaffReport)pending.push('Đang chờ ảnh báo cáo nhân viên; chưa kiểm tra 7 nhân viên.');
+ else{
+  const missingStaff=STAFF_MASTER.filter(x=>!staffIds.has(x.user));
+  missingStaff.forEach(x=>warnings.push('Thiếu nhân viên '+x.user+' '+x.name));
+  if(staffIds.size!==7)warnings.push('Báo cáo nhân viên mới nhận diện '+staffIds.size+'/7 người.');
+ }
+ if(!hasRaceReport)pending.push('Đang chờ ảnh báo cáo thi đua CE/DV/ICT; chưa kiểm tra 39 chương trình.');
+ else{
+  Object.keys(counts).forEach(g=>{
+   if(counts[g]!==13)warnings.push('Nhóm '+g+' mới nhận diện '+counts[g]+'/13 chương trình.');
+  });
+ }
+ const complete=hasStore&&hasStaffReport&&hasRaceReport;
+ return {
+  staffCount:staffIds.size,programCounts:counts,warnings,pending,
+  hasStore,hasStaffReport,hasRaceReport,
+  ok:complete&&staffIds.size===7&&Object.values(counts).every(x=>x===13)&&warnings.length===0
+ };
 }
 async function runOCR(){
  const fs=Array.from(reportInput.files||[]);
@@ -424,7 +462,7 @@ async function runOCR(){
   const data={ok:true,images:allReports,imageStats};
   const v=validatePreview(data.images);
   const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW GEMINI OCR — CHƯA LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${x.originalKB} KB → ${x.compressedKB} KB`).join(' • ')}</p><ul>${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>'}</ul><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Chưa đủ/đang có lỗi mapping. Dashboard giữ nguyên, không lưu.</p>'}</div>`;
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW GEMINI OCR — CHƯA LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${x.originalKB} KB → ${x.compressedKB} KB`).join(' • ')}</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Chưa đủ/đang có lỗi mapping. Dashboard giữ nguyên, không lưu.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
@@ -440,7 +478,7 @@ async function runOCR(){
   });
   document.getElementById('cancelOCRBtn')?.addEventListener('click',()=>{preview.innerHTML='';setMappingStatus('Đã hủy preview; dữ liệu cũ giữ nguyên.',false)});
   st.textContent=`Hoàn tất OCR ${fs.length}/${fs.length} ảnh • Chưa lưu`;
-  setMappingStatus(v.ok?'Preview đủ điều kiện xác nhận. Dashboard chưa thay đổi.':'Preview chưa đạt; dashboard giữ nguyên.',v.ok);
+  setMappingStatus(v.ok?'Preview đủ điều kiện xác nhận. Dashboard chưa thay đổi.':(v.pending.length?'OCR ảnh hiện tại hoàn tất; đang chờ các ảnh báo cáo còn lại.':'Preview chưa đạt; dashboard giữ nguyên.'),v.ok);
  }catch(e){
   st.textContent='OCR bị gián đoạn: '+(e.message||e);
   setMappingStatus('OCR lỗi; dashboard cũ được giữ nguyên. '+(e.message||e),false);
