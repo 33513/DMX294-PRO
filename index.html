@@ -255,7 +255,7 @@ reportInput.addEventListener("change",()=>{const box=document.getElementById("im
 function preprocessImage(file,scale=2){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve(c)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error("Không đọc được ảnh"))};img.src=url})}
 const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase();
 function nval(s){let z=String(s||"").replace(/[^0-9.,-]/g,"");if(!z)return null;if(z.includes(".")&&z.includes(","))z=z.replace(/\./g,"").replace(",",".");else if(z.includes(","))z=z.replace(",",".");return Number(z)}
-function groupWords(words){const ws=(words||[]).filter(w=>w.text&&w.bbox&&w.confidence>15).map(w=>({t:w.text.trim(),x:(w.bbox.x0+w.bbox.x1)/2,y:(w.bbox.y0+w.bbox.y1)/2,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0,y1:w.bbox.y1}));ws.sort((a,b)=>a.y-b.y||a.x-b.x);let rows=[];for(const w of ws){let r=rows.find(r=>Math.abs(r.y-w.y)<Math.max(12,(w.y1-w.y0)*.6));if(!r){r={y:w.y,words:[]};rows.push(r)}r.words.push(w);r.y=r.words.reduce((a,b)=>a+b.y,0)/r.words.length}return rows.sort((a,b)=>a.y-b.y).map(r=>({...r,words:r.words.sort((a,b)=>a.x-b.x),text:r.words.map(w=>w.t).join(" ")}))}
+function groupWords(words){const ws=(words||[]).filter(w=>w.text&&w.bbox&&w.confidence>15).map(w=>({t:w.text.trim(),x:(w.bbox.x0+w.bbox.x1)/2,y:(w.bbox.y0+w.bbox.y1)/2,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0,y1:w.bbox.y1,conf:Number(w.confidence||0)}));ws.sort((a,b)=>a.y-b.y||a.x-b.x);let rows=[];for(const w of ws){let r=rows.find(r=>Math.abs(r.y-w.y)<Math.max(12,(w.y1-w.y0)*.6));if(!r){r={y:w.y,words:[]};rows.push(r)}r.words.push(w);r.y=r.words.reduce((a,b)=>a+b.y,0)/r.words.length}return rows.sort((a,b)=>a.y-b.y).map(r=>({...r,words:r.words.sort((a,b)=>a.x-b.x),text:r.words.map(w=>w.t).join(" ")}))}
 function parseStore(text,words,imageWidth,imageHeight){
  const W=imageWidth||2640,H=imageHeight||3224;
  const center=w=>({x:((w.bbox.x0+w.bbox.x1)/2)/W,y:((w.bbox.y0+w.bbox.y1)/2)/H,t:String(w.text||"").trim(),conf:Number(w.confidence||0)});
@@ -290,50 +290,94 @@ function parseStore(text,words,imageWidth,imageHeight){
  return {sales,target,gift};
 }
 function parseStaff(rows,imageWidth){
- // Mapping theo USER cố định: dùng vị trí Y của USER làm neo, gom các số
- // trên cùng hàng (kể cả OCR tách thành nhiều line gần nhau). Không OCR tên NV.
- const out=[], anchors=[];
- const masterIds=new Set(STAFF_MASTER.map(m=>m.user));
+ // Bảng nhân viên có cột cố định. USER ID là neo hàng; số liệu lấy theo
+ // tọa độ cột, tuyệt đối không lấy "số đầu tiên bên phải ID".
  const all=[];
- for(const row of rows)for(const w of (row.words||[]))all.push({...w,ry:row.y});
- for(const w of all){const t=String(w.t||'').trim();if(/^\d{4,7}$/.test(t)&&masterIds.has(t))anchors.push({id:t,y:w.y,x:w.x})}
- anchors.sort((a,b)=>a.y-b.y);
- const unique=[];for(const a of anchors){if(!unique.some(x=>x.id===a.id&&Math.abs(x.y-a.y)<8))unique.push(a)}
- for(let i=0;i<unique.length;i++){
-  const a=unique[i],next=unique[i+1],y0=a.y-18,y1=next?((a.y+next.y)/2):a.y+42;
-  // lấy token số ở phía bên phải USER, nằm trong dải hàng của nhân viên đó
-  const cells=all.filter(w=>w.x>a.x+20&&w.y>=y0&&w.y<y1&&/^[\d.,]+$/.test(String(w.t||'').trim()))
-   .sort((u,v)=>u.y-v.y||u.x-v.x);
-  const nums=[];for(const w of cells){const v=nval(w.t);if(Number.isFinite(v)&&!nums.some(n=>Math.abs(n.y-w.y)<8&&Math.abs(n.x-w.x)<10))nums.push({v,y:w.y,x:w.x})}
-  nums.sort((u,v)=>u.x-v.x);
-  if(!nums.length)continue;
-  const m=STAFF_MASTER.find(x=>x.user===a.id);if(!m)continue;
-  out.push({user:a.id,name:m.name,sales:nums[0].v,gift:nums.length>1?nums[1].v:null,target:staffTargetDefault});
+ for(const row of rows)for(const w of (row.words||[]))all.push({...w});
+ const masterIds=new Set(STAFF_MASTER.map(m=>m.user));
+ const anchors=[];
+ for(const w of all){
+  const id=String(w.t||'').replace(/\D/g,'');
+  if(masterIds.has(id)&&/^\d{4,7}$/.test(String(w.t||'').trim()))
+   anchors.push({id,y:(w.y0+w.y1)/2});
  }
- return out;
+ const unique=[];
+ for(const a of anchors.sort((a,b)=>a.y-b.y)){
+  if(!unique.some(x=>x.id===a.id&&Math.abs(x.y-a.y)<10))unique.push(a);
+ }
+ function pick(a,xMin,xMax){
+  const candidates=all.filter(w=>{
+   const x=(w.x0+w.x1)/2,y=(w.y0+w.y1)/2;
+   return x>=xMin&&x<=xMax&&y>=a.y-75&&y<=a.y-12&&/^[\d.,]+$/.test(String(w.t||'').trim());
+  }).map(w=>({v:nval(w.t),y:(w.y0+w.y1)/2,conf:Number(w.conf||0)}))
+    .filter(x=>Number.isFinite(x.v));
+  if(!candidates.length)return null;
+  // The correct cell is the one vertically nearest to the ID baseline minus ~48px.
+  const targetY=arguments[0].y-48;
+  candidates.sort((a,b)=>Math.abs(a.y-targetY)-Math.abs(b.y-targetY)||b.conf-a.conf);
+  return candidates[0].v;
+ }
+ return unique.map(a=>{
+  const m=STAFF_MASTER.find(x=>x.user===a.id);
+  return {
+   user:a.id,name:m.name,
+   sales:pick(a,675,770),
+   gift:pick(a,1215,1315),
+   target:staffTargetDefault
+  };
+ });
 }
 function parseRace(rows,imageWidth){
- const out=[];
- const headers=/chuong trinh|thuc hien|target|% ht|% hoan thanh/i;
- for(const row of rows){
-   const words=(row.words||[]).slice().sort((a,b)=>a.x-b.x);
-   const text=norm(words.map(w=>w.t).join(" "));
-   if(headers.test(text))continue;
-   // Ignore rows without a program label or numeric cells.
-   const firstNum=words.findIndex(w=>nval(w.t)!=null);
-   if(firstNum<1)continue;
-   const name=words.slice(0,firstNum).map(w=>w.t).join(" ").replace(/[+|]/g," ").trim();
-   if(!name||name.length<2)continue;
-   const vals=words.slice(firstNum).map(w=>nval(w.t)).filter(v=>v!=null);
-   if(!vals.length)continue;
-   // Typical table columns: Thực hiện, Target, %HT. Keep all observed values,
-   // percent from last numeric cell (often OCR splits '%' from number).
-   const actual=vals.length>=2?vals[0]:null;
-   const target=vals.length>=2?vals[1]:null;
-   const pct=vals.length>=3?vals[vals.length-1]:null;
-   out.push({name,actual,target,pct});
+ // Đọc theo tọa độ cột, gom đủ 13 hàng rồi mới khóa tên theo danh mục của nhóm.
+ const all=[];
+ for(const row of rows)for(const w of (row.words||[]))all.push({...w});
+ const numeric=all.map(w=>{
+  const raw=String(w.t||'').trim();
+  const zeroLike=/^(°|º|o|O)$/.test(raw);
+  return {t:raw,x:(w.x0+w.x1)/2,y:(w.y0+w.y1)/2,conf:Number(w.conf||0),v:zeroLike?0:nval(raw)};
+ }).filter(w=>w.t&&Number.isFinite(w.v));
+ const actuals=numeric.filter(w=>w.x>=620&&w.x<=770).sort((a,b)=>a.y-b.y);
+ const targets=numeric.filter(w=>w.x>=830&&w.x<=980);
+ const percents=numeric.filter(w=>w.x>=1000&&w.x<=1150);
+ const clusters=[];
+ for(const a of actuals){
+  let c=clusters.find(x=>Math.abs(x.y-a.y)<24);
+  if(!c){c={y:a.y,actual:a};clusters.push(c)}
+  else if(a.conf>c.actual.conf)c.actual=a;
  }
- return out;
+ const rawRows=[];
+ for(const c of clusters){
+  const a=c.actual;
+  const t=targets.filter(x=>Math.abs(x.y-a.y)<24).sort((x,y)=>Math.abs(x.y-a.y)-Math.abs(y.y-a.y))[0]||null;
+  const p=percents.filter(x=>Math.abs(x.y-a.y)<24).sort((x,y)=>Math.abs(x.y-a.y)-Math.abs(y.y-a.y))[0]||null;
+  if(!t)continue;
+  const rowY=(a.y+t.y+(p?p.y:a.y))/(p?3:2);
+  const labelWords=all.filter(w=>{
+   const x=(w.x0+w.x1)/2,y=(w.y0+w.y1)/2;
+   return x>=80&&x<=560&&Math.abs(y-rowY)<=48&&Number(w.conf||0)>20;
+  }).sort((x,y)=>x.y0-y.y0||x.x0-y.x0);
+  const label=labelWords.map(w=>w.t).join(' ').replace(/[+|]/g,' ').trim();
+  rawRows.push({label,matched:matchCanonicalProgram(label),actual:a.v,target:t.v,percent:p?p.v:(t.v>0?a.v/t.v*100:null),y:rowY});
+ }
+ const groupCounts={CE:0,DV:0,ICT:0};
+ rawRows.forEach(r=>{if(r.matched&&r.matched.score>=0.38)groupCounts[r.matched.group]++});
+ const group=Object.keys(groupCounts).sort((a,b)=>groupCounts[b]-groupCounts[a])[0];
+ if(!group||groupCounts[group]<5)return rawRows.filter(r=>r.matched).map(r=>({group:r.matched.group,name:r.matched.name,actual:r.actual,target:r.target,percent:r.percent}));
+ const used=new Set(),out=[],unmatched=[];
+ for(const r of rawRows){
+  const m=r.matched;
+  if(m&&m.group===group&&!used.has(m.name)){
+   used.add(m.name);out.push({group,name:m.name,actual:r.actual,target:r.target,percent:r.percent,y:r.y});
+  }else unmatched.push(r);
+ }
+ // If the image contains all 13 numeric rows, any unrecognized/duplicate labels
+ // are assigned only to the still-missing names in that same locked group.
+ const missing=raceGroups[group].filter(name=>!used.has(name));
+ if(rawRows.length===13&&missing.length===unmatched.length){
+  unmatched.sort((a,b)=>a.y-b.y);
+  missing.forEach((name,i)=>{const r=unmatched[i];out.push({group,name,actual:r.actual,target:r.target,percent:r.percent,y:r.y})});
+ }
+ return out.sort((a,b)=>a.y-b.y).map(({y,...r})=>r);
 }
 
 // OCR miễn phí chạy trực tiếp trong trình duyệt bằng Tesseract.js.
@@ -345,18 +389,29 @@ function numberOrNull(v){if(v===null||v===undefined||v===''||!Number.isFinite(Nu
 function matchCanonicalProgram(rawName){
  const q=normalizeText(rawName);
  if(!q)return null;
+ const compact=q.replace(/\s/g,'');
  let best=null,bestScore=0;
  for(const group of ['CE','DV','ICT']){
   for(const canonical of raceGroups[group]){
-   const c=normalizeText(canonical);
-   if(q===c)return {group,name:canonical,score:1};
+   const c=normalizeText(canonical),cc=c.replace(/\s/g,'');
    const qt=new Set(q.split(' ').filter(Boolean)),ct=new Set(c.split(' ').filter(Boolean));
-   const common=[...qt].filter(x=>ct.has(x)).length;
-   const score=common/Math.max(1,ct.size);
+   const tokenScore=[...qt].filter(x=>ct.has(x)).length/Math.max(1,ct.size);
+   let compactScore=0;
+   if(compact===cc)compactScore=1;
+   else if(compact.includes(cc)||cc.includes(compact))compactScore=Math.min(compact.length,cc.length)/Math.max(compact.length,cc.length);
+   else{
+    const a=compact,b=cc,dp=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));
+    for(let i=0;i<=a.length;i++)dp[i][0]=i;
+    for(let j=0;j<=b.length;j++)dp[0][j]=j;
+    for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)
+     dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+    compactScore=1-dp[a.length][b.length]/Math.max(a.length,b.length,1);
+   }
+   const score=Math.max(tokenScore,compactScore);
    if(score>bestScore){bestScore=score;best={group,name:canonical,score};}
   }
  }
- return bestScore>=0.55?best:null;
+ return bestScore>=0.38?best:null;
 }
 
 function classifyReport(text,words){
@@ -405,9 +460,10 @@ function buildLocalReport(ocrData,file){
  }else if(type==='race'){
   const parsed=parseRace(rows,ocrData.imageWidth);
   for(const x of parsed){
-   const matched=matchCanonicalProgram(x.name);
-   if(!matched){report.warnings.push('Chưa ghép được tên chương trình: '+x.name);continue;}
-   report.programs.push({group:matched.group,name:matched.name,actual:numberOrNull(x.actual),target:numberOrNull(x.target),percent:numberOrNull(x.pct)});
+   if(!raceGroups[x.group]||!raceGroups[x.group].includes(x.name)){
+    report.warnings.push('Chưa ghép được tên chương trình: '+x.name);continue;
+   }
+   report.programs.push({group:x.group,name:x.name,actual:numberOrNull(x.actual),target:numberOrNull(x.target),percent:numberOrNull(x.percent)});
   }
   if(!report.programs.length)report.warnings.push('Không nhận diện được dòng chương trình thi đua.');
  }else{
@@ -478,6 +534,8 @@ function validatePreview(reports){
    if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);
    if(staffIds.has(id))warnings.push('USER ID trùng: '+id);
    staffIds.add(id);
+   if(x.salesQd==null)warnings.push('Chưa đọc được doanh thu QĐ của USER '+id);
+   if(x.installmentQd==null)warnings.push('Chưa đọc được trả góp QĐ của USER '+id);
   });
   (r.programs||[]).forEach(x=>{
    const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;
@@ -485,6 +543,8 @@ function validatePreview(reports){
    if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);
    programs.add(key);
    if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
+   if(x.actual==null)warnings.push('Chưa đọc được Thực hiện: '+x.name);
+   if(x.target==null)warnings.push('Chưa đọc được Target: '+x.name);
   });
  });
  const counts={CE:0,DV:0,ICT:0};
@@ -554,6 +614,8 @@ function validatePreview(reports){
    if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);
    if(staffIds.has(id))warnings.push('USER ID trùng: '+id);
    staffIds.add(id);
+   if(x.salesQd==null)warnings.push('Chưa đọc được doanh thu QĐ của USER '+id);
+   if(x.installmentQd==null)warnings.push('Chưa đọc được trả góp QĐ của USER '+id);
   });
   (r.programs||[]).forEach(x=>{
    const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;
@@ -561,6 +623,9 @@ function validatePreview(reports){
    if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);
    programs.add(key);
    if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
+   if(x.actual==null)warnings.push('Chưa đọc được Thực hiện: '+x.name);
+   if(x.target==null)warnings.push('Chưa đọc được Target: '+x.name);
+   if(Number(x.target)===0&&Number(x.actual)>0)warnings.push('Target bằng 0 nhưng Thực hiện lớn hơn 0, cần đối chiếu: '+x.name);
   });
  });
  const counts={CE:0,DV:0,ICT:0};
@@ -583,6 +648,13 @@ function validatePreview(reports){
   Object.keys(counts).forEach(g=>{
    if(counts[g]!==13)warnings.push('Nhóm '+g+' mới nhận diện '+counts[g]+'/13 chương trình.');
   });
+ }
+ if(hasStore&&hasStaffReport){
+  const storeReport=(reports||[]).find(r=>r.reportType==='store'&&r.store);
+  const staffReports=(reports||[]).filter(r=>r.reportType==='staff');
+  const staffSales=staffReports.flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0);
+  if(storeReport&&storeReport.store.salesQd!=null&&Math.abs(staffSales-Number(storeReport.store.salesQd))>1)
+   warnings.push('Tổng DT QĐ nhân viên ('+staffSales+') lệch DT QĐ cửa hàng ('+storeReport.store.salesQd+').');
  }
  const complete=hasStore&&hasStaffReport&&hasRaceReport;
  return {
