@@ -426,6 +426,200 @@ async function createLocalOCRWorker(statusElement){
  return worker;
 }
 
+
+
+// Khôi phục hàm preview, mapping và lưu dữ liệu từ dashboard V4.2.
+function applyGeminiReports(reports){
+ let notes=[],staffById=new Map(STAFF_MASTER.map(m=>[m.user,{...m,sales:null,gift:null,target:null}])),programMap=new Map();
+ let store=null;
+ for(const r of reports||[]){
+  if(r.reportType==='store'&&r.store){store=r.store;notes.push('Tổng siêu thị');}
+  if(r.reportType==='staff'){
+   (r.staff||[]).forEach(x=>{const id=String(x.userId||'');if(!staffById.has(id)){notes.push('USER ID lạ '+id);return;}const old=staffById.get(id);staffById.set(id,{...old,sales:numberOrNull(x.salesQd),gift:numberOrNull(x.installmentQd),target:staffTargetDefault});});notes.push('Nhân viên '+(r.staff||[]).length+' dòng');
+  }
+  ['CE','DV','ICT'].forEach(g=>(r.programs||[]).filter(x=>x.group===g).forEach(x=>{const k=g+'|'+normalizeText(x.name);programMap.set(k,{group:g,name:String(x.name||''),actual:numberOrNull(x.actual),target:numberOrNull(x.target),percent:numberOrNull(x.percent)});}));
+  (r.warnings||[]).forEach(w=>notes.push('Gemini: '+w));
+ }
+ if(store){storeSalesQd=numberOrNull(store.salesQd);storeInstallmentQd=numberOrNull(store.installmentQd);if(store.targetDay!=null){storeTarget=numberOrNull(store.targetDay);document.getElementById('targetInput').value=storeTarget??'';}notes.push('KPI tổng đã nhận');}
+ staff=STAFF_MASTER.map(m=>staffById.get(m.user));
+ races=[...programMap.values()].map(x=>[x.name,x.actual,x.target,x.percent,x.group]);
+ persistDashboard();render();return notes;
+}
+
+function validatePreview(reports){
+ const staffIds=new Set(),programs=new Set(),warnings=[],pending=[];
+ let hasStore=false,hasStaffReport=false,hasRaceReport=false;
+ (reports||[]).forEach(r=>{
+  const type=String(r.reportType||'unknown').toLowerCase();
+  if(type==='store'&&r.store)hasStore=true;
+  if(type==='staff')hasStaffReport=true;
+  if(type==='race')hasRaceReport=true;
+  if(type==='unknown')warnings.push('Không phân loại được loại báo cáo của ảnh '+(r.sourceImage||''));
+  (r.staff||[]).forEach(x=>{
+   const id=String(x.userId||'');
+   if(!id){warnings.push('Có dòng nhân viên thiếu USER ID.');return;}
+   if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);
+   if(staffIds.has(id))warnings.push('USER ID trùng: '+id);
+   staffIds.add(id);
+  });
+  (r.programs||[]).forEach(x=>{
+   const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;
+   if(!name){warnings.push('Có chương trình thiếu tên.');return;}
+   if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);
+   programs.add(key);
+   if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
+  });
+ });
+ const counts={CE:0,DV:0,ICT:0};
+ (reports||[]).forEach(r=>(r.programs||[]).forEach(x=>{
+  const g=String(x.group||'').toUpperCase();
+  if(counts[g]!==undefined)counts[g]++;
+ }));
+
+ // Chỉ kiểm tra đủ nhân viên khi đã có ảnh báo cáo nhân viên.
+ // Chỉ kiểm tra đủ 39 chương trình khi đã có ít nhất một ảnh thi đua.
+ if(!hasStore)pending.push('Chưa có ảnh báo cáo tổng quan cửa hàng.');
+ if(!hasStaffReport)pending.push('Đang chờ ảnh báo cáo nhân viên; chưa kiểm tra 7 nhân viên.');
+ else{
+  const missingStaff=STAFF_MASTER.filter(x=>!staffIds.has(x.user));
+  missingStaff.forEach(x=>warnings.push('Thiếu nhân viên '+x.user+' '+x.name));
+  if(staffIds.size!==7)warnings.push('Báo cáo nhân viên mới nhận diện '+staffIds.size+'/7 người.');
+ }
+ if(!hasRaceReport)pending.push('Đang chờ ảnh báo cáo thi đua CE/DV/ICT; chưa kiểm tra 39 chương trình.');
+ else{
+  Object.keys(counts).forEach(g=>{
+   if(counts[g]!==13)warnings.push('Nhóm '+g+' mới nhận diện '+counts[g]+'/13 chương trình.');
+  });
+ }
+ const complete=hasStore&&hasStaffReport&&hasRaceReport;
+ return {
+  staffCount:staffIds.size,programCounts:counts,warnings,pending,
+  hasStore,hasStaffReport,hasRaceReport,
+  ok:complete&&staffIds.size===7&&Object.values(counts).every(x=>x===13)&&warnings.length===0
+ };
+}
+
+let dmxApiSeq=0;
+async function apiCall(action,payload={}){
+ const token=document.getElementById('apiTokenInput')?.value?.trim()||'';
+ const id='dmx294_'+(++dmxApiSeq)+'_'+Date.now();
+ const iframe=document.createElement('iframe');iframe.name=id;iframe.title='DMX294 API response';iframe.style.display='none';
+ const form=document.createElement('form');form.method='POST';form.action=GEMINI_OCR_API;form.target=id;form.style.display='none';
+ const input=document.createElement('input');input.type='hidden';input.name='payload';
+ input.value=JSON.stringify({action,token,requestId:id,...payload});form.appendChild(input);
+ document.body.append(iframe,form);
+ let settled=false;
+ try{
+  const data=await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>finish(reject,Error('Không nhận được phản hồi Apps Script sau 180 giây. Kiểm tra Executions và URL triển khai.')),180000);
+   function cleanup(){clearTimeout(timer);window.removeEventListener('message',onMessage);form.remove();iframe.remove()}
+   function finish(fn,value){if(settled)return;settled=true;cleanup();fn(value)}
+   function onMessage(ev){const m=ev.data;if(!m||typeof m!=='object'||m.__dmx294!==id)return;finish(m.error?reject:resolve,m.error?Error(m.error):m.data)}
+   window.addEventListener('message',onMessage);
+   form.submit();
+  });
+  if(!data||data.ok===false)throw Error(data?.error||'Apps Script trả phản hồi không hợp lệ');
+  return data;
+ }catch(e){if(!settled){settled=true;form.remove();iframe.remove()}throw e}
+}
+function validatePreview(reports){
+ const staffIds=new Set(),programs=new Set(),warnings=[],pending=[];
+ let hasStore=false,hasStaffReport=false,hasRaceReport=false;
+ (reports||[]).forEach(r=>{
+  const type=String(r.reportType||'unknown').toLowerCase();
+  if(type==='store'&&r.store)hasStore=true;
+  if(type==='staff')hasStaffReport=true;
+  if(type==='race')hasRaceReport=true;
+  if(type==='unknown')warnings.push('Không phân loại được loại báo cáo của ảnh '+(r.sourceImage||''));
+  (r.staff||[]).forEach(x=>{
+   const id=String(x.userId||'');
+   if(!id){warnings.push('Có dòng nhân viên thiếu USER ID.');return;}
+   if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);
+   if(staffIds.has(id))warnings.push('USER ID trùng: '+id);
+   staffIds.add(id);
+  });
+  (r.programs||[]).forEach(x=>{
+   const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;
+   if(!name){warnings.push('Có chương trình thiếu tên.');return;}
+   if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);
+   programs.add(key);
+   if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
+  });
+ });
+ const counts={CE:0,DV:0,ICT:0};
+ (reports||[]).forEach(r=>(r.programs||[]).forEach(x=>{
+  const g=String(x.group||'').toUpperCase();
+  if(counts[g]!==undefined)counts[g]++;
+ }));
+
+ // Chỉ kiểm tra đủ nhân viên khi đã có ảnh báo cáo nhân viên.
+ // Chỉ kiểm tra đủ 39 chương trình khi đã có ít nhất một ảnh thi đua.
+ if(!hasStore)pending.push('Chưa có ảnh báo cáo tổng quan cửa hàng.');
+ if(!hasStaffReport)pending.push('Đang chờ ảnh báo cáo nhân viên; chưa kiểm tra 7 nhân viên.');
+ else{
+  const missingStaff=STAFF_MASTER.filter(x=>!staffIds.has(x.user));
+  missingStaff.forEach(x=>warnings.push('Thiếu nhân viên '+x.user+' '+x.name));
+  if(staffIds.size!==7)warnings.push('Báo cáo nhân viên mới nhận diện '+staffIds.size+'/7 người.');
+ }
+ if(!hasRaceReport)pending.push('Đang chờ ảnh báo cáo thi đua CE/DV/ICT; chưa kiểm tra 39 chương trình.');
+ else{
+  Object.keys(counts).forEach(g=>{
+   if(counts[g]!==13)warnings.push('Nhóm '+g+' mới nhận diện '+counts[g]+'/13 chương trình.');
+  });
+ }
+ const complete=hasStore&&hasStaffReport&&hasRaceReport;
+ return {
+  staffCount:staffIds.size,programCounts:counts,warnings,pending,
+  hasStore,hasStaffReport,hasRaceReport,
+  ok:complete&&staffIds.size===7&&Object.values(counts).every(x=>x===13)&&warnings.length===0
+ };
+}
+async function runOCR(){
+ const fs=Array.from(reportInput.files||[]);
+ if(!fs.length){alert('Vui lòng chọn 1–5 ảnh báo cáo.');return}
+ if(fs.length>5){alert('API chỉ nhận tối đa 5 ảnh mỗi lượt.');return}
+ const st=document.getElementById('ocrStatus'),btn=document.querySelector('button[onclick="runOCR()"]');
+ if(btn){btn.disabled=true;btn.textContent='Đang xử lý ảnh…'}
+ const allReports=[],imageStats=[];
+ try{
+  for(let i=0;i<fs.length;i++){
+   st.textContent=`Đang nén ảnh ${i+1}/${fs.length}…`;
+   const compressed=await compressReportImage(fs[i]);
+   imageStats.push({name:compressed.name,originalKB:Math.round(compressed.originalBytes/1024),compressedKB:Math.round(compressed.compressedBytes/1024),width:compressed.width,height:compressed.height});
+   st.textContent=`Đang gửi Gemini ảnh ${i+1}/${fs.length} (${imageStats[i].compressedKB} KB)…`;
+   // Mỗi ảnh là một yêu cầu Apps Script riêng để tránh một request 5 ảnh vượt giới hạn 180 giây.
+   const data=await apiCall('ocr',{images:[{name:compressed.name,mimeType:compressed.mimeType,data:compressed.data}]});
+   if(!Array.isArray(data.images)||data.images.length!==1)throw Error('Gemini không trả đúng kết quả cho ảnh '+(i+1));
+   allReports.push(data.images[0]);
+   st.textContent=`Gemini đã đọc ${i+1}/${fs.length} ảnh. Đang chuẩn bị ảnh tiếp theo…`;
+  }
+  const data={ok:true,images:allReports,imageStats};
+  const v=validatePreview(data.images);
+  const preview=document.getElementById('ocrResult');
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW GEMINI OCR — CHƯA LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${x.originalKB} KB → ${x.compressedKB} KB`).join(' • ')}</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Chưa đủ/đang có lỗi mapping. Dashboard giữ nguyên, không lưu.</p>'}</div>`;
+  document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
+  document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
+   const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
+   try{
+    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images}});
+    applyGeminiReports(data.images);
+    const loaded=await apiCall('load');
+    if(loaded.data?.reports)applyGeminiReports(loaded.data.reports);
+    st.textContent='Đã xác nhận và lưu backend • '+saved.savedAt;
+    setMappingStatus('Đã lưu '+v.staffCount+'/7 nhân viên và 39/39 chương trình.',true);
+    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Backend Apps Script và dashboard đã cập nhật.</p></div>';
+   }catch(e){cb.disabled=false;cb.textContent='Xác nhận & lưu dữ liệu';alert('Không lưu được: '+e.message)}
+  });
+  document.getElementById('cancelOCRBtn')?.addEventListener('click',()=>{preview.innerHTML='';setMappingStatus('Đã hủy preview; dữ liệu cũ giữ nguyên.',false)});
+  st.textContent=`Hoàn tất OCR ${fs.length}/${fs.length} ảnh • Chưa lưu`;
+  setMappingStatus(v.ok?'Preview đủ điều kiện xác nhận. Dashboard chưa thay đổi.':(v.pending.length?'OCR ảnh hiện tại hoàn tất; đang chờ các ảnh báo cáo còn lại.':'Preview chưa đạt; dashboard giữ nguyên.'),v.ok);
+ }catch(e){
+  st.textContent='OCR bị gián đoạn: '+(e.message||e);
+  setMappingStatus('OCR lỗi; dashboard cũ được giữ nguyên. '+(e.message||e),false);
+  document.getElementById('ocrResult').innerHTML=`<div class="panel" style="padding:12px;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa"><b>Không hoàn tất OCR.</b><p>${esc(e.message||String(e))}</p><p>Ảnh gốc vẫn còn trong trình duyệt. Chạy lại sẽ bắt đầu lại từ ảnh đầu.</p></div>`;
+ }finally{if(btn){btn.disabled=false;btn.textContent='Phân tích OCR ảnh'}}
+}
+
 async function runOCR(){
  const fs=Array.from(reportInput.files||[]);
  if(!fs.length){alert('Vui lòng chọn 1–5 ảnh báo cáo.');return}
