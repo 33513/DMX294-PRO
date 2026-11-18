@@ -290,30 +290,30 @@ function parseStore(text,words,imageWidth,imageHeight){
  return {sales,target,gift};
 }
 function parseStaff(rows,imageWidth){
- // Bảng nhân viên có cột cố định. USER ID là neo hàng; số liệu lấy theo
- // tọa độ cột, tuyệt đối không lấy "số đầu tiên bên phải ID".
+ const W=Number(imageWidth)||1;
  const all=[];
  for(const row of rows)for(const w of (row.words||[]))all.push({...w});
  const masterIds=new Set(STAFF_MASTER.map(m=>m.user));
  const anchors=[];
  for(const w of all){
-  const id=String(w.t||'').replace(/\D/g,'');
-  if(masterIds.has(id)&&/^\d{4,7}$/.test(String(w.t||'').trim()))
+  const raw=String(w.t||'').trim(),id=raw.replace(/\D/g,'');
+  if(masterIds.has(id)&&/^\d{4,7}$/.test(raw))
    anchors.push({id,y:(w.y0+w.y1)/2});
  }
  const unique=[];
  for(const a of anchors.sort((a,b)=>a.y-b.y)){
-  if(!unique.some(x=>x.id===a.id&&Math.abs(x.y-a.y)<10))unique.push(a);
+  if(!unique.some(x=>x.id===a.id&&Math.abs(x.y-a.y)<8))unique.push(a);
  }
- function pick(a,xMin,xMax){
+ // Vị trí cột theo tỷ lệ chiều rộng ảnh: Doanh thu QĐ ~57%, DT trả góp QĐ ~96%.
+ function cellFor(anchor,lo,hi){
+  const targetY=anchor.y-42;
   const candidates=all.filter(w=>{
-   const x=(w.x0+w.x1)/2,y=(w.y0+w.y1)/2;
-   return x>=xMin&&x<=xMax&&y>=a.y-75&&y<=a.y-12&&/^[\d.,]+$/.test(String(w.t||'').trim());
+   const x=((w.x0+w.x1)/2)/W,y=(w.y0+w.y1)/2;
+   return x>=lo&&x<=hi&&y>=anchor.y-115&&y<=anchor.y-5&&
+     /^[\d.,]+$/.test(String(w.t||'').trim());
   }).map(w=>({v:nval(w.t),y:(w.y0+w.y1)/2,conf:Number(w.conf||0)}))
-    .filter(x=>Number.isFinite(x.v));
+    .filter(w=>Number.isFinite(w.v));
   if(!candidates.length)return null;
-  // The correct cell is the one vertically nearest to the ID baseline minus ~48px.
-  const targetY=arguments[0].y-48;
   candidates.sort((a,b)=>Math.abs(a.y-targetY)-Math.abs(b.y-targetY)||b.conf-a.conf);
   return candidates[0].v;
  }
@@ -321,63 +321,55 @@ function parseStaff(rows,imageWidth){
   const m=STAFF_MASTER.find(x=>x.user===a.id);
   return {
    user:a.id,name:m.name,
-   sales:pick(a,675,770),
-   gift:pick(a,1215,1315),
+   sales:cellFor(a,.515,.635),
+   gift:cellFor(a,.925,1.005),
    target:staffTargetDefault
   };
  });
 }
-function parseRace(rows,imageWidth){
- // Đọc theo tọa độ cột, gom đủ 13 hàng rồi mới khóa tên theo danh mục của nhóm.
+function parseRace(rows,imageWidth,rawText){
+ const W=Number(imageWidth)||1;
  const all=[];
  for(const row of rows)for(const w of (row.words||[]))all.push({...w});
+ const group=detectRaceGroup(rawText||rows.map(r=>r.text).join(' '));
+ if(!group)return [];
  const numeric=all.map(w=>{
   const raw=String(w.t||'').trim();
   const zeroLike=/^(°|º|o|O)$/.test(raw);
-  return {t:raw,x:(w.x0+w.x1)/2,y:(w.y0+w.y1)/2,conf:Number(w.conf||0),v:zeroLike?0:nval(raw)};
+  return {t:raw,x:((w.x0+w.x1)/2)/W,y:(w.y0+w.y1)/2,
+    conf:Number(w.conf||0),v:zeroLike?0:nval(raw)};
  }).filter(w=>w.t&&Number.isFinite(w.v));
- const actuals=numeric.filter(w=>w.x>=620&&w.x<=770).sort((a,b)=>a.y-b.y);
- const targets=numeric.filter(w=>w.x>=830&&w.x<=980);
- const percents=numeric.filter(w=>w.x>=1000&&w.x<=1150);
+ // Normalized table columns; robust to source image resolution and scale.
+ const actuals=numeric.filter(w=>w.x>=.435&&w.x<=.555).sort((a,b)=>a.y-b.y);
+ const targets=numeric.filter(w=>w.x>=.595&&w.x<=.735);
+ const percents=numeric.filter(w=>w.x>=.765&&w.x<=.885);
  const clusters=[];
  for(const a of actuals){
-  let c=clusters.find(x=>Math.abs(x.y-a.y)<24);
+  let c=clusters.find(x=>Math.abs(x.y-a.y)<Math.max(12,(a.y*.012)));
   if(!c){c={y:a.y,actual:a};clusters.push(c)}
   else if(a.conf>c.actual.conf)c.actual=a;
  }
- const rawRows=[];
+ const out=[],usedNames=new Set();
  for(const c of clusters){
   const a=c.actual;
-  const t=targets.filter(x=>Math.abs(x.y-a.y)<24).sort((x,y)=>Math.abs(x.y-a.y)-Math.abs(y.y-a.y))[0]||null;
-  const p=percents.filter(x=>Math.abs(x.y-a.y)<24).sort((x,y)=>Math.abs(x.y-a.y)-Math.abs(y.y-a.y))[0]||null;
+  const t=targets.filter(x=>Math.abs(x.y-a.y)<Math.max(18,a.y*.012))
+    .sort((x,y)=>Math.abs(x.y-a.y)-Math.abs(y.y-a.y))[0]||null;
+  const p=percents.filter(x=>Math.abs(x.y-a.y)<Math.max(18,a.y*.012))
+    .sort((x,y)=>Math.abs(x.y-a.y)-Math.abs(y.y-a.y))[0]||null;
   if(!t)continue;
   const rowY=(a.y+t.y+(p?p.y:a.y))/(p?3:2);
   const labelWords=all.filter(w=>{
-   const x=(w.x0+w.x1)/2,y=(w.y0+w.y1)/2;
-   return x>=80&&x<=560&&Math.abs(y-rowY)<=48&&Number(w.conf||0)>20;
+   const x=((w.x0+w.x1)/2)/W,y=(w.y0+w.y1)/2;
+   return x>=.035&&x<=.405&&Math.abs(y-rowY)<=Math.max(28,rowY*.018)&&Number(w.conf||0)>15;
   }).sort((x,y)=>x.y0-y.y0||x.x0-y.x0);
   const label=labelWords.map(w=>w.t).join(' ').replace(/[+|]/g,' ').trim();
-  rawRows.push({label,matched:matchCanonicalProgram(label),actual:a.v,target:t.v,percent:p?p.v:(t.v>0?a.v/t.v*100:null),y:rowY});
+  const matched=matchCanonicalProgram(label);
+  if(!matched||matched.group!==group||matched.score<.34||usedNames.has(matched.name))continue;
+  usedNames.add(matched.name);
+  out.push({group,name:matched.name,actual:a.v,target:t.v,
+    percent:p?p.v:(t.v>0?a.v/t.v*100:null),_y:rowY,_label:label});
  }
- const groupCounts={CE:0,DV:0,ICT:0};
- rawRows.forEach(r=>{if(r.matched&&r.matched.score>=0.38)groupCounts[r.matched.group]++});
- const group=Object.keys(groupCounts).sort((a,b)=>groupCounts[b]-groupCounts[a])[0];
- if(!group||groupCounts[group]<5)return rawRows.filter(r=>r.matched).map(r=>({group:r.matched.group,name:r.matched.name,actual:r.actual,target:r.target,percent:r.percent}));
- const used=new Set(),out=[],unmatched=[];
- for(const r of rawRows){
-  const m=r.matched;
-  if(m&&m.group===group&&!used.has(m.name)){
-   used.add(m.name);out.push({group,name:m.name,actual:r.actual,target:r.target,percent:r.percent,y:r.y});
-  }else unmatched.push(r);
- }
- // If the image contains all 13 numeric rows, any unrecognized/duplicate labels
- // are assigned only to the still-missing names in that same locked group.
- const missing=raceGroups[group].filter(name=>!used.has(name));
- if(rawRows.length===13&&missing.length===unmatched.length){
-  unmatched.sort((a,b)=>a.y-b.y);
-  missing.forEach((name,i)=>{const r=unmatched[i];out.push({group,name,actual:r.actual,target:r.target,percent:r.percent,y:r.y})});
- }
- return out.sort((a,b)=>a.y-b.y).map(({y,...r})=>r);
+ return out.sort((a,b)=>a._y-b._y).map(({_y,_label,...x})=>x);
 }
 
 // OCR miễn phí chạy trực tiếp trong trình duyệt bằng Tesseract.js.
@@ -414,27 +406,33 @@ function matchCanonicalProgram(rawName){
  return bestScore>=0.38?best:null;
 }
 
+function detectRaceGroup(text){
+ const t=normalizeText(text).replace(/\s+/g,' ');
+ const aliases={
+  CE:['ce lg','dien tu samsung','tivi tcl','may giat','may loc kk','may nuoc nong','may say','quat gio','may lanh','tu lanh','noi com','may loc nuoc'],
+  DV:['bao hiem tho dmx','bao hiem tho ict','vpbank','tpbank','sim dmx','vi tra sau','nap rut','homecredit','bao hiem tong','vas','fecredit','vay tien mat'],
+  ICT:['cap sac','dien thoai realme','dien thoai vivo','laptop','loa phu kien','phu kien cong nghe','sac du phong','tai nghe','camera','smartwatch','dien thoai tablet android','den nang luong']
+ };
+ const scores={CE:0,DV:0,ICT:0};
+ for(const g of Object.keys(aliases)){
+  for(const phrase of aliases[g])if(t.includes(phrase))scores[g]++;
+ }
+ const best=Object.keys(scores).sort((a,b)=>scores[b]-scores[a])[0];
+ return scores[best]>=3?best:null;
+}
 function classifyReport(text,words){
  const t=normalizeText(text).replace(/\s+/g,' ');
  const ids=new Set(STAFF_MASTER.map(x=>x.user));
  const hasStaffId=(words||[]).some(w=>ids.has(String(w.text||'').replace(/\D/g,'')));
  if(hasStaffId)return 'staff';
-
- const raceHits=['chuong trinh','thuc hien','% ht target','hoan thanh target']
-  .filter(k=>t.includes(k)).length;
- if(raceHits>=2)return 'race';
-
- const storePatterns=[
-  /target\s*ngay/,
-  /quy\s*doi/,
-  /thoi\s*gian\s*lam\s*viec/,
-  /ty\s*trong/,
-  /du\s*kien\s*ngay/,
-  /dt\s*tr[oao]\s*gop/,
-  /%?\s*ht/
- ];
- const storeHits=storePatterns.filter(rx=>rx.test(t)).length;
+ const storeHits=[
+  /target\s*ngay/.test(t),/quy\s*doi/.test(t),/thoi\s*gian\s*lam\s*viec/.test(t),
+  /ty\s*trong/.test(t),/du\s*kien\s*ngay/.test(t),/tra\s*gop/.test(t)
+ ].filter(Boolean).length;
  if(storeHits>=2)return 'store';
+ const raceGroup=detectRaceGroup(t);
+ if(raceGroup)return 'race';
+ if(/nhom\s*hang/.test(t)&&(/thuc\s*hien/.test(t)||/target/.test(t)))return 'race';
  return 'unknown';
 }
 function buildLocalReport(ocrData,file){
@@ -457,8 +455,12 @@ function buildLocalReport(ocrData,file){
   const parsed=parseStaff(rows,ocrData.imageWidth);
   report.staff=parsed.map(x=>({userId:String(x.user),name:x.name,salesQd:numberOrNull(x.sales),installmentQd:numberOrNull(x.gift)}));
   if(!report.staff.length)report.warnings.push('Không nhận diện được USER ID trong ảnh nhân viên.');
+  report.staff.forEach(x=>{
+   if(x.salesQd==null)report.warnings.push('Chưa đọc được Doanh thu QĐ của USER '+x.userId);
+   if(x.installmentQd==null)report.warnings.push('Chưa đọc được DT trả góp QĐ của USER '+x.userId);
+  });
  }else if(type==='race'){
-  const parsed=parseRace(rows,ocrData.imageWidth);
+  const parsed=parseRace(rows,ocrData.imageWidth,text);
   for(const x of parsed){
    if(!raceGroups[x.group]||!raceGroups[x.group].includes(x.name)){
     report.warnings.push('Chưa ghép được tên chương trình: '+x.name);continue;
@@ -744,7 +746,7 @@ async function runOCR(){
   const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR'};
   const v=validatePreview(data.images);
   const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ — CHẠY TRÊN TRÌNH DUYỆT</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V1.6 — CHẠY TRÊN TRÌNH DUYỆT</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
