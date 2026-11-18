@@ -282,6 +282,10 @@ function parseStore(text,words,imageWidth,imageHeight){
  let gift=null;
  const giftCandidates=all.filter(w=>w.x>.55&&w.x<.98&&w.y>.68&&w.y<.95&&/\d+\s*\/\s*\d+/.test(w.t));
  if(giftCandidates.length){const m=giftCandidates.sort((a,b)=>a.y-b.y)[0].t.match(/(\d+(?:[.,]\d+)?)\s*\//);if(m)gift=nval(m[1]);}
+ if(gift==null){
+  const mg=t.match(/(?:dt\s*tra\s*gop|tra\s*gop\s*qd|tra\s*gop)[^0-9]{0,45}(\d+(?:[.,]\d+)?)\s*\//);
+  if(mg)gift=nval(mg[1]);
+ }
  return {sales,target,gift};
 }
 function parseStaff(rows,imageWidth){
@@ -355,13 +359,25 @@ function matchCanonicalProgram(rawName){
 }
 
 function classifyReport(text,words){
- const t=normalizeText(text);
+ const t=normalizeText(text).replace(/\\s+/g,' ');
  const ids=new Set(STAFF_MASTER.map(x=>x.user));
- const hasStaffId=(words||[]).some(w=>ids.has(String(w.text||'').trim()));
+ const hasStaffId=(words||[]).some(w=>ids.has(String(w.text||'').replace(/\\D/g,'')));
  if(hasStaffId)return 'staff';
- if((t.includes('chuong trinh')||t.includes('thuc hien')) &&
-    (t.includes('target')||t.includes('hoan thanh')||t.includes('thuc hien')))return 'race';
- if(t.includes('quy doi')||t.includes('target ngay')||t.includes('doanh thu'))return 'store';
+
+ const raceHits=['chuong trinh','thuc hien','% ht target','hoan thanh target']
+  .filter(k=>t.includes(k)).length;
+ if(raceHits>=2)return 'race';
+
+ const storeHits=[
+  /target\\s*ngay/.test(t),
+  /quy\\s*doi/.test(t),
+  /thoi gian lam viec/.test(t),
+  /ty trong tra gop/.test(t),
+  /du kien ngay/.test(t),
+  /dt\\s*tra\\s*gop/.test(t),
+  /%\\s*ht/.test(t)
+ ].filter(Boolean).length;
+ if(storeHits>=2 || (/target\\s*ngay/.test(t)&&/\\d/.test(t)))return 'store';
  return 'unknown';
 }
 
