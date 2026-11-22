@@ -298,13 +298,13 @@ function parseStore(text,words,imageWidth,imageHeight){
   /dt\s*tr[oao]\s*gop[^0-9]{0,45}(\d+(?:[.,]\d+)?)\s*\//
  ];
  for(const rx of giftLabelPatterns){const mg=t.match(rx);if(mg){gift=nval(mg[1]);break;}}
- // Dự phòng khi OCR tách "65", "/", "113" thành các token riêng: chỉ xét vùng KPI cuối của ảnh tổng quan.
+ // Dự phòng theo tọa độ: KPI DThu trả góp là thẻ thứ tư trên hàng KPI đầu.
+ // Tuyệt đối không lấy tổng trả góp từ bảng nhân viên để thay thế KPI cửa hàng.
  if(gift==null){
-  const region=numeric.filter(w=>w.x>.55&&w.x<.99&&w.y>.62&&w.y<.98).sort((a,b)=>a.y-b.y||a.x-b.x);
-  for(let i=0;i<region.length-2;i++){
-   const a=region[i],slash=all.find(w=>w.x>a.x&&w.x<a.x+.035&&Math.abs(w.y-a.y)<.018&&/^\/$/.test(w.t));
-   const b=region.slice(i+1).find(w=>w.x>a.x&&Math.abs(w.y-a.y)<.025);
-   if(slash&&b&&a.v>=0&&b.v>=a.v){gift=a.v;break;}
+  const region=numeric.filter(w=>w.x>=.60&&w.x<=.82&&w.y>=.055&&w.y<=.30&&w.v>=0&&w.v<1000000);
+  if(region.length){
+   region.sort((a,b)=>(Math.abs(a.x-.71)+Math.abs(a.y-.17)*1.5)-(Math.abs(b.x-.71)+Math.abs(b.y-.17)*1.5)||b.conf-a.conf);
+   gift=region[0].v;
   }
  }
  return {sales,target,gift};
@@ -348,7 +348,7 @@ function parseStaff(rows,imageWidth,imageHeight){
   }
   const m=STAFF_MASTER.find(x=>x.user===a.id);
   // Cột doanh thu QĐ và trả góp QĐ được xác định theo vị trí cột của bảng nhân viên.
-  result.push({user:a.id,name:m.name,sales:readColumn(.46,.62),gift:readColumn(.88,.995),target:staffTargetDefault});
+  result.push({user:a.id,name:m.name,sales:readColumn(.44,.57),gift:readColumn(.85,.995),target:staffTargetDefault});
  }
  return result;
 }
@@ -565,63 +565,6 @@ function applyGeminiReports(reports){
  persistDashboard();render();return notes;
 }
 
-function validatePreview(reports){
- const staffIds=new Set(),programs=new Set(),warnings=[],pending=[];
- let hasStore=false,hasStaffReport=false,hasRaceReport=false;
- (reports||[]).forEach(r=>{
-  const type=String(r.reportType||'unknown').toLowerCase();
-  if(type==='store'&&r.store)hasStore=true;
-  if(type==='staff')hasStaffReport=true;
-  if(type==='race')hasRaceReport=true;
-  if(type==='unknown')warnings.push('Không phân loại được loại báo cáo của ảnh '+(r.sourceImage||''));
-  (r.staff||[]).forEach(x=>{
-   const id=String(x.userId||'');
-   if(!id){warnings.push('Có dòng nhân viên thiếu USER ID.');return;}
-   if(!STAFF_MASTER.some(m=>m.user===id))warnings.push('USER ID lạ: '+id);
-   if(staffIds.has(id))warnings.push('USER ID trùng: '+id);
-   staffIds.add(id);
-   if(x.salesQd==null)warnings.push('Chưa đọc được doanh thu QĐ của USER '+id);
-   if(x.installmentQd==null)warnings.push('Chưa đọc được trả góp QĐ của USER '+id);
-  });
-  (r.programs||[]).forEach(x=>{
-   const g=String(x.group||'').toUpperCase(),name=normalizeText(x.name),key=g+'|'+name;
-   if(!name){warnings.push('Có chương trình thiếu tên.');return;}
-   if(programs.has(key))warnings.push('Chương trình trùng: '+x.name);
-   programs.add(key);
-   if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
-   if(x.actual==null)warnings.push('Chưa đọc được Thực hiện: '+x.name);
-   if(x.target==null)warnings.push('Chưa đọc được Target: '+x.name);
-  });
- });
- const counts={CE:0,DV:0,ICT:0};
- (reports||[]).forEach(r=>(r.programs||[]).forEach(x=>{
-  const g=String(x.group||'').toUpperCase();
-  if(counts[g]!==undefined)counts[g]++;
- }));
-
- // Chỉ kiểm tra đủ nhân viên khi đã có ảnh báo cáo nhân viên.
- // Chỉ kiểm tra đủ 39 chương trình khi đã có ít nhất một ảnh thi đua.
- if(!hasStore)pending.push('Chưa có ảnh báo cáo tổng quan cửa hàng.');
- if(!hasStaffReport)pending.push('Đang chờ ảnh báo cáo nhân viên; chưa kiểm tra 7 nhân viên.');
- else{
-  const missingStaff=STAFF_MASTER.filter(x=>!staffIds.has(x.user));
-  missingStaff.forEach(x=>warnings.push('Thiếu nhân viên '+x.user+' '+x.name));
-  if(staffIds.size!==7)warnings.push('Báo cáo nhân viên mới nhận diện '+staffIds.size+'/7 người.');
- }
- if(!hasRaceReport)pending.push('Đang chờ ảnh báo cáo thi đua CE/DV/ICT; chưa kiểm tra 39 chương trình.');
- else{
-  Object.keys(counts).forEach(g=>{
-   if(counts[g]!==13)warnings.push('Nhóm '+g+' mới nhận diện '+counts[g]+'/13 chương trình.');
-  });
- }
- const complete=hasStore&&hasStaffReport&&hasRaceReport;
- return {
-  staffCount:staffIds.size,programCounts:counts,warnings,pending,
-  hasStore,hasStaffReport,hasRaceReport,
-  ok:complete&&staffIds.size===7&&Object.values(counts).every(x=>x===13)&&warnings.length===0
- };
-}
-
 let dmxApiSeq=0;
 async function apiCall(action,payload={}){
  const token=document.getElementById('apiTokenInput')?.value?.trim()||'';
@@ -763,7 +706,7 @@ async function runOCR(){
   const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR V2.4'};
   const v=validatePreview(data.images);
   const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V2.4 • OCR HAI LƯỢT + ĐỐI CHIẾU CỘT SỐ</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V2.4 • OCR HAI LƯỢT + ĐỐI CHIẾU CỘT SỐ</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
