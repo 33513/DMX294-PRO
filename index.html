@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<title>DMX294 PRO • LUXURY Dashboard V3.21</title>
+<title>DMX294 PRO • LUXURY Dashboard V3.22</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#eaf1ff 0,transparent 32%),radial-gradient(circle at 95% 10%,#fff4df 0,transparent 25%),var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -202,7 +202,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">OCR MIỄN PHÍ V3.21 • kiểm tra từng ô</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">OCR MIỄN PHÍ V3.22 • kiểm tra từng ô</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -454,7 +454,8 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
   let v=zeroLike?0:nval(raw);
   // Dấu chấm đôi khi bị OCR thành dấu hai chấm hoặc bị bỏ trong cột target.
   if(Number.isFinite(v)&&x>=.63&&x<=.76&&v>=100&&v<=9999)v=v/100;
-  return {t:raw,x,y,conf:Number(w.conf||0),crop:!!w._crop,targeted:!!w._targeted,threshold:w._threshold??null,v};
+  return {t:raw,x,y,conf:Number(w.conf||0),crop:!!w._crop,targeted:!!w._targeted,
+   column:w._column||null,mode:w._mode||null,threshold:w._threshold??null,v};
  }).filter(w=>w.t&&Number.isFinite(w.v)&&w.y>=H*.14);
  const actuals=numeric.filter(w=>w.x>=.45&&w.x<=.60);
  const targets=numeric.filter(w=>w.x>=.63&&w.x<=.76);
@@ -478,8 +479,10 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
   // Ưu tiên kết quả đọc đúng ô (targeted crop), sau đó mới tới OCR toàn ảnh.
   // Ba lần đọc ở ba ngưỡng là các phiếu cho cùng một ô; lấy đa số thay vì
   // báo mâu thuẫn chỉ vì một ngưỡng đơn lẻ đọc nhầm watermark.
-  const chooseCell=(items)=>{
-   const targeted=items.filter(x=>x.targeted);
+  const chooseCell=(items,column)=>{
+   // Loại hẳn phiếu OCR riêng thuộc cột khác; tránh vùng crop Target/% chồng lấn.
+   items=items.filter(x=>!x.targeted||!x.column||x.column===column);
+   const targeted=items.filter(x=>x.targeted&&(!x.column||x.column===column));
    const credible=targeted.filter(x=>x.conf>=20);
    const pool=credible.length?credible:targeted;
    if(pool.length){
@@ -498,7 +501,8 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
     const independent=[...items].filter(x=>!x.targeted).sort(rank)[0]||null;
     if(majority&&majority[1].length>=2){
      const chosen=[...majority[1]].sort((a,b)=>rank(a,b))[0];
-     // Khi 2/3 lần đọc ô riêng biệt đồng thuận, ưu tiên kết quả này. OCR toàn ảnh có thể ghép nhầm watermark/cột lân cận nên không được quyền phủ quyết.
+     // Nếu OCR toàn ảnh/crop độc lập đọc khác, không tự chọn theo đa số: khóa ô để người dùng đối chiếu.
+     if(independent&&Math.abs(independent.v-chosen.v)>.001)return {item:null,conflict:true};
      return {item:chosen,conflict:false};
     }
     if(votes.length===1){
@@ -511,7 +515,7 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
    return {item:fallback,conflict:false};
   };
   const aa=nearAll(actuals),tt=nearAll(targets),pp=nearAll(percents);
-  const ca=chooseCell(aa),ct=chooseCell(tt),cp=chooseCell(pp);
+  const ca=chooseCell(aa,'actual'),ct=chooseCell(tt,'target'),cp=chooseCell(pp,'percent');
   const a=ca.item,t=ct.item,p=cp.item;
   const conflictActual=ca.conflict,conflictTarget=ct.conflict,conflictPercent=cp.conflict;
   let actual=a?.v??null,target=t?.v??null,percent=p?.v??null;
@@ -1035,7 +1039,7 @@ async function runOCR(){
   const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR V3.20'};
   const v=validatePreview(data.images);
   const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V3.21 • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name||'')}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V3.22 • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name||'')}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
@@ -1045,12 +1049,12 @@ async function runOCR(){
     // khiến dữ liệu vừa OCR bị ghi đè trên dashboard bằng số liệu cũ.
     const finalCheck=validatePreview(data.images);
     if(!finalCheck.ok)throw Error('Dữ liệu không còn đạt điều kiện lưu: '+[...finalCheck.pending,...finalCheck.warnings].join(' | '));
-    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:'V3.21'}});
+    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:'V3.22'}});
     // Dùng đúng dữ liệu vừa xác nhận làm nguồn render sau khi SAVE thành công.
     applyGeminiReports(data.images);
     st.textContent='Đã xác nhận và lưu dữ liệu mới • '+(saved.savedAt||new Date().toLocaleString('vi-VN'));
     setMappingStatus('Đã lưu dữ liệu OCR mới: '+v.staffCount+'/7 nhân viên và 39/39 chương trình.',true);
-    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Dashboard đang hiển thị đúng bộ dữ liệu V3.21 vừa xác nhận; không nạp đè bản LOAD cũ ngay sau khi lưu.</p></div>';
+    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Dashboard đang hiển thị đúng bộ dữ liệu V3.22 vừa xác nhận; không nạp đè bản LOAD cũ ngay sau khi lưu.</p></div>';
    }catch(e){cb.disabled=false;cb.textContent='Xác nhận & lưu dữ liệu';alert('Không lưu được: '+e.message)}
   });
   document.getElementById('cancelOCRBtn')?.addEventListener('click',()=>{preview.innerHTML='';setMappingStatus('Đã hủy preview; dữ liệu cũ giữ nguyên.',false)});
