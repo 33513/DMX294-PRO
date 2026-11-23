@@ -421,7 +421,7 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
  }).filter(w=>w.t&&Number.isFinite(w.v)&&w.y>=H*.14);
  const actuals=numeric.filter(w=>w.x>=.45&&w.x<=.60);
  const targets=numeric.filter(w=>w.x>=.63&&w.x<=.76);
- const percents=numeric.filter(w=>w.x>=.80&&w.x<=.95);
+ const percents=numeric.filter(w=>w.x>=.77&&w.x<=.92);
  // Tạo hàng từ hợp nhất cột thực hiện và target để không mất hàng khi một cột OCR bỏ sót số 0.
  // Thêm cột % làm mốc hàng dự phòng nếu OCR bỏ sót số ở cột Thực hiện/Target.
  const anchors=[...actuals,...targets,...percents].sort((a,b)=>a.y-b.y);
@@ -461,7 +461,8 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
     const independent=[...items].filter(x=>!x.targeted).sort(rank)[0]||null;
     if(majority&&majority[1].length>=2){
      const chosen=[...majority[1]].sort((a,b)=>rank(a,b))[0];
-     return {item:chosen,conflict:!!(independent&&Math.abs(independent.v-chosen.v)>.001)};
+     // Khi 2/3 lần đọc ô riêng biệt đồng thuận, ưu tiên kết quả này. OCR toàn ảnh có thể ghép nhầm watermark/cột lân cận nên không được quyền phủ quyết.
+     return {item:chosen,conflict:false};
     }
     if(votes.length===1){
      if(independent&&Math.abs(independent.v-votes[0].v)>.001)return {item:votes[0],conflict:true};
@@ -616,11 +617,11 @@ async function refineStaffNumericCells(file,words,imageWidth,imageHeight,worker)
  return extra;
 }
 async function refineRaceMissingCells(file,words,imageWidth,imageHeight,rowCenters,worker){
- // Đọc lại TOÀN BỘ 26 ô Thực hiện/Target của mỗi bảng (13 hàng x 2 cột).
- // Không bỏ qua chỉ vì OCR toàn ảnh báo confidence cao: watermark có thể tạo confidence giả.
+ // Đọc lại riêng từng ô của cả 3 cột (13 hàng x 3 cột) theo đúng ranh giới bảng.
+ // Cột % HT nằm xấp xỉ 77%-92% chiều rộng ảnh; không lấn sang cột Hạng vùng.
  if(!Array.isArray(rowCenters)||rowCenters.length!==13)return [];
  const H=Number(imageHeight)||1,extra=[];
- const columns=[['actual',.45,.60],['target',.63,.76],['percent',.80,.95]];
+ const columns=[['actual',.45,.60],['target',.63,.76],['percent',.77,.92]];
  for(const cy of rowCenters){
   for(const [column,x0,x1] of columns){
    const y0=Math.max(0,(cy-H*.018)/H),y1=Math.min(1,(cy+H*.018)/H);
@@ -628,7 +629,8 @@ async function refineRaceMissingCells(file,words,imageWidth,imageHeight,rowCente
    await worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM.SINGLE_LINE,preserve_interword_spaces:'1',tessedit_char_whitelist:'0123456789.,'});
    const regionCtx=region.canvas.getContext('2d',{willReadFrequently:true});
    const originalPixels=regionCtx.getImageData(0,0,region.canvas.width,region.canvas.height);
-   for(const threshold of [165,180,215]){
+   const thresholds=column==='percent'?[205,210,215]:[165,180,215];
+   for(const threshold of thresholds){
     regionCtx.putImageData(originalPixels,0,0);
     binarizeNumericCanvas(region.canvas,threshold);
     const result=await worker.recognize(region.canvas);
