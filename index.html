@@ -186,7 +186,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">OCR MIỄN PHÍ V3.7 • kiểm tra từng ô</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">OCR MIỄN PHÍ V3.8 • kiểm tra từng ô</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -218,7 +218,7 @@ const raceGroups={
 // Không dùng thứ tự danh mục chuẩn của dashboard để gán số theo vị trí dòng.
 const raceImageOrder={
  CE:["Điện tử Samsung","Tivi TCL","CE LG","Máy lọc KK - Hút bụi - Hút ẩm","Máy lọc nước","Máy nước nóng","Máy sấy / Máy rửa chén","Nồi cơm & Nồi chiên","Quạt gió","Tủ Lạnh / Đông / Mát","Điện tử","Máy giặt","Máy Lạnh"],
- DV:["Bảo hiểm Thọ ICT","Mở thẻ tín dụng VPBANK MWG và TPBANK EVO","Sim","Sim ĐMX","Vay tiền mặt","Ví trả sau","Bảo hiểm Tổng","Trả Chậm Điện máy & Gia dụng","Bảo hiểm Thọ ĐMX","Trả chậm Homecredit","Trả chậm FECREDIT, SAMSUNG F+, SHINHAN, MCREDIT","VAS","Nạp rút"],
+ DV:["Bảo hiểm Thọ ĐMX","Bảo hiểm Thọ ICT","Mở thẻ tín dụng VPBANK MWG và TPBANK EVO","Sim","Sim ĐMX","Vay tiền mặt","Ví trả sau","Bảo hiểm Tổng","Trả Chậm Điện máy & Gia dụng","Trả chậm Homecredit","Trả chậm FECREDIT, SAMSUNG F+, SHINHAN, MCREDIT","VAS","Nạp rút"],
  ICT:["Đèn năng lượng mặt trời","Điện thoại Realme","Điện thoại Vivo","Laptop","Loa Phụ Kiện","Phụ kiện công nghệ","Sạc dự phòng","Phụ kiện khác IT & Nhóm khác","Tai nghe","Camera","ĐIỆN THOẠI & TABLET ANDROID","Đồng hồ & Smartwatch","Cáp sạc"]
 };
 
@@ -432,15 +432,25 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
  }
  const rowsOut=[];
  for(const row of rowAnchors.sort((a,b)=>a.y-b.y)){
-  const near=(arr)=>arr.filter(x=>Math.abs(x.y-row.y)<Math.max(30,H*.022))
-   .sort((a,b)=>Number(a.targeted)-Number(b.targeted)||Number(a.crop)-Number(b.crop)||b.conf-a.conf||Math.abs(a.y-row.y)-Math.abs(b.y-row.y))[0]||null;
-  const a=near(actuals),t=near(targets),p=near(percents);
+  const nearAll=(arr)=>arr.filter(x=>Math.abs(x.y-row.y)<Math.max(30,H*.022));
+  const choose=(arr)=>arr.sort((a,b)=>Number(a.targeted)-Number(b.targeted)||Number(a.crop)-Number(b.crop)||b.conf-a.conf||Math.abs(a.y-row.y)-Math.abs(b.y-row.y))[0]||null;
+  const aa=nearAll(actuals),tt=nearAll(targets),pp=nearAll(percents);
+  const a=choose([...aa]),t=choose([...tt]),p=choose([...pp]);
+  const hasConflict=(items)=>{
+   const credible=items.filter(x=>x.conf>=35);
+   for(let i=0;i<credible.length;i++)for(let j=i+1;j<credible.length;j++){
+    const x=credible[i].v,y=credible[j].v;
+    if(Number.isFinite(x)&&Number.isFinite(y)&&Math.abs(x-y)>Math.max(.02,Math.max(Math.abs(x),Math.abs(y))*.02))return true;
+   }
+   return false;
+  };
+  const conflictActual=hasConflict(aa),conflictTarget=hasConflict(tt);
   let actual=a?.v??null,target=t?.v??null,percent=p?.v??null;
   if(percent!=null&&percent>1000&&percent<10000)percent/=10;
   // Không suy ngược Thực hiện/Target từ %; giữ số OCR gốc, không tự tạo số liệu.
   // Dòng thiếu một cột vẫn được giữ để kiểm tra báo đúng chương trình cần đối chiếu.
   if(percent==null&&actual!=null&&target!=null)percent=target>0?actual/target*100:(actual===0?0:null);
-  rowsOut.push({group,name:null,actual,target,percent,_y:row.y});
+  rowsOut.push({group,name:null,actual,target,percent,conflictActual,conflictTarget,_y:row.y});
  }
  const order=raceImageOrder[group]||[];
  if(rowsOut.length===13&&order.length===13){
@@ -584,15 +594,20 @@ async function refineRaceMissingCells(file,words,imageWidth,imageHeight,rowCente
    const y0=Math.max(0,(cy-H*.018)/H),y1=Math.min(1,(cy+H*.018)/H);
    const region=await preprocessRegion(file,x0,y0,x1,y1,8);
    await worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM.SINGLE_LINE,preserve_interword_spaces:'1',tessedit_char_whitelist:'0123456789.,'});
-   binarizeNumericCanvas(region.canvas,215);
-   const result=await worker.recognize(region.canvas);
-   for(const w of result.data?.words||[]){
+   const regionCtx=region.canvas.getContext('2d',{willReadFrequently:true});
+   const originalPixels=regionCtx.getImageData(0,0,region.canvas.width,region.canvas.height);
+   for(const threshold of [165,180,215]){
+    regionCtx.putImageData(originalPixels,0,0);
+    binarizeNumericCanvas(region.canvas,threshold);
+    const result=await worker.recognize(region.canvas);
+    for(const w of result.data?.words||[]){
     const value=String(w.text||'').replace(/\s/g,'').trim();
     if(!/^\d{1,4}(?:[.,]\d{1,2})?$/.test(value))continue;
     extra.push({text:value,confidence:Number(w.confidence||0),_crop:true,_targeted:true,_column:column,bbox:{
      x0:region.offsetX+w.bbox.x0/region.scale,y0:region.offsetY+w.bbox.y0/region.scale,
      x1:region.offsetX+w.bbox.x1/region.scale,y1:region.offsetY+w.bbox.y1/region.scale
     }});
+    }
    }
   }
  }
@@ -647,7 +662,8 @@ function buildLocalReport(ocrData,file){
     report.warnings.push('Chưa ghép được tên chương trình: '+x.name);continue;
    }
    const actual=numberOrNull(x.actual),target=numberOrNull(x.target);
-   report.programs.push({group:x.group,name:x.name,actual,target,percent:actual==null||target==null||target<=0?null:actual/target*100});
+   report.programs.push({group:x.group,name:x.name,actual,target,percent:actual==null||target==null||target<=0?null:actual/target*100,_ocrConflict:!!(x.conflictActual||x.conflictTarget)});
+   if(x.conflictActual||x.conflictTarget)report.warnings.push('OCR không thống nhất giữa các lần đọc ô '+(x.conflictActual?'Thực hiện ':'')+(x.conflictTarget?'Target ':'')+'của chương trình '+x.name+'. Cần đối chiếu ảnh gốc.');
   }
   if(!report.programs.length)report.warnings.push('Không nhận diện được dòng chương trình thi đua.');
  }else{
@@ -752,6 +768,7 @@ function validatePreview(reports){
    if(!raceGroups[g])warnings.push('Nhóm không hợp lệ: '+g);
    if(x.actual==null)warnings.push('Chưa đọc được Thực hiện: '+x.name);
    if(x.target==null)warnings.push('Chưa đọc được Target: '+x.name);
+   if(x._ocrConflict)warnings.push('Kết quả OCR mâu thuẫn ở chương trình '+x.name+'.');
    if(x.actual!=null&&x.target!=null&&Number(x.target)===0&&Number(x.actual)>0)warnings.push('Target bằng 0 nhưng Thực hiện lớn hơn 0, cần đối chiếu: '+x.name);
   });
  });
@@ -849,10 +866,10 @@ async function runOCR(){
    imageStats.push({name:file.name,originalKB:Math.round(file.size/1024),compressedKB:Math.round(file.size/1024)});
    st.textContent=`Đã đọc ảnh ${i+1}/${fs.length}. Đang kiểm tra dữ liệu…`;
   }
-  const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR V3.7'};
+  const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR V3.8'};
   const v=validatePreview(data.images);
   const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V3.7 • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name||'')}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V3.8 • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name||'')}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
@@ -862,12 +879,12 @@ async function runOCR(){
     // khiến dữ liệu vừa OCR bị ghi đè trên dashboard bằng số liệu cũ.
     const finalCheck=validatePreview(data.images);
     if(!finalCheck.ok)throw Error('Dữ liệu không còn đạt điều kiện lưu: '+[...finalCheck.pending,...finalCheck.warnings].join(' | '));
-    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:'V3.7'}});
+    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:'V3.8'}});
     // Dùng đúng dữ liệu vừa xác nhận làm nguồn render sau khi SAVE thành công.
     applyGeminiReports(data.images);
     st.textContent='Đã xác nhận và lưu dữ liệu mới • '+(saved.savedAt||new Date().toLocaleString('vi-VN'));
     setMappingStatus('Đã lưu dữ liệu OCR mới: '+v.staffCount+'/7 nhân viên và 39/39 chương trình.',true);
-    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Dashboard đang hiển thị đúng bộ dữ liệu V3.7 vừa xác nhận; không nạp đè bản LOAD cũ ngay sau khi lưu.</p></div>';
+    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Dashboard đang hiển thị đúng bộ dữ liệu V3.8 vừa xác nhận; không nạp đè bản LOAD cũ ngay sau khi lưu.</p></div>';
    }catch(e){cb.disabled=false;cb.textContent='Xác nhận & lưu dữ liệu';alert('Không lưu được: '+e.message)}
   });
   document.getElementById('cancelOCRBtn')?.addEventListener('click',()=>{preview.innerHTML='';setMappingStatus('Đã hủy preview; dữ liệu cũ giữ nguyên.',false)});
