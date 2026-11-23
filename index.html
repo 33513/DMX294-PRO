@@ -217,7 +217,7 @@ const raceGroups={
 // Thứ tự dòng đã đối chiếu trực tiếp với 3 ảnh báo cáo người dùng cung cấp.
 // Không dùng thứ tự danh mục chuẩn của dashboard để gán số theo vị trí dòng.
 const raceImageOrder={
- CE:["Điện tử Samsung","Tivi TCL","CE LG","Máy lọc KK - Hút bụi - Hút ẩm","Máy lọc nước","Máy nước nóng","Máy sấy / Máy rửa chén","Nồi cơm & Nồi chiên","Quạt gió","Tủ Lạnh / Đông / Mát","Điện tử","Máy giặt","Máy Lạnh"],
+ CE:["Điện tử Samsung","Tivi TCL","CE LG","Máy giặt","Máy lọc KK - Hút bụi - Hút ẩm","Máy lọc nước","Máy nước nóng","Máy sấy / Máy rửa chén","Nồi cơm & Nồi chiên","Quạt gió","Tủ Lạnh / Đông / Mát","Điện tử","Máy Lạnh"],
  DV:["Bảo hiểm Thọ ĐMX","Bảo hiểm Thọ ICT","Mở thẻ tín dụng VPBANK MWG và TPBANK EVO","Sim","Sim ĐMX","Vay tiền mặt","Ví trả sau","Bảo hiểm Tổng","Trả Chậm Điện máy & Gia dụng","Trả chậm Homecredit","Trả chậm FECREDIT, SAMSUNG F+, SHINHAN, MCREDIT","VAS","Nạp rút"],
  ICT:["Đèn năng lượng mặt trời","Điện thoại Realme","Điện thoại Vivo","Laptop","Loa Phụ Kiện","Phụ kiện công nghệ","Sạc dự phòng","Phụ kiện khác IT & Nhóm khác","Tai nghe","Camera","ĐIỆN THOẠI & TABLET ANDROID","Đồng hồ & Smartwatch","Cáp sạc"]
 };
@@ -433,18 +433,30 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
  const rowsOut=[];
  for(const row of rowAnchors.sort((a,b)=>a.y-b.y)){
   const nearAll=(arr)=>arr.filter(x=>Math.abs(x.y-row.y)<Math.max(30,H*.022));
-  const choose=(arr)=>arr.sort((a,b)=>Number(a.targeted)-Number(b.targeted)||Number(a.crop)-Number(b.crop)||b.conf-a.conf||Math.abs(a.y-row.y)-Math.abs(b.y-row.y))[0]||null;
-  const aa=nearAll(actuals),tt=nearAll(targets),pp=nearAll(percents);
-  const a=choose([...aa]),t=choose([...tt]),p=choose([...pp]);
-  const hasConflict=(items)=>{
-   const credible=items.filter(x=>x.conf>=35);
-   for(let i=0;i<credible.length;i++)for(let j=i+1;j<credible.length;j++){
-    const x=credible[i].v,y=credible[j].v;
-    if(Number.isFinite(x)&&Number.isFinite(y)&&Math.abs(x-y)>Math.max(.02,Math.max(Math.abs(x),Math.abs(y))*.02))return true;
+  const rank=(x,y)=>Number(y.targeted)-Number(x.targeted)||Number(y.crop)-Number(x.crop)||y.conf-x.conf||Math.abs(x.y-row.y)-Math.abs(y.y-row.y);
+  // Ưu tiên kết quả đọc đúng ô (targeted crop), sau đó mới tới OCR toàn ảnh.
+  // Ba lần đọc ở ba ngưỡng là các phiếu cho cùng một ô; lấy đa số thay vì
+  // báo mâu thuẫn chỉ vì một ngưỡng đơn lẻ đọc nhầm watermark.
+  const chooseCell=(items)=>{
+   const targeted=items.filter(x=>x.targeted);
+   const credible=targeted.filter(x=>x.conf>=20);
+   const pool=credible.length?credible:targeted;
+   if(pool.length){
+    const counts=new Map();
+    pool.forEach(x=>{const k=Number(x.v.toFixed(2));if(!counts.has(k))counts.set(k,[]);counts.get(k).push(x)});
+    const ranked=[...counts.entries()].sort((a,b)=>b[1].length-a[1].length||Math.max(...b[1].map(x=>x.conf))-Math.max(...a[1].map(x=>x.conf)));
+    const majority=ranked[0];
+    if(majority&&majority[1].length>=2)return {item:[...majority[1]].sort((a,b)=>rank(a,b))[0],conflict:false};
+    if(pool.length===1)return {item:pool[0],conflict:false};
+    return {item:[...pool].sort((a,b)=>rank(a,b))[0],conflict:true};
    }
-   return false;
+   const fallback=[...items].sort((a,b)=>rank(a,b))[0]||null;
+   return {item:fallback,conflict:false};
   };
-  const conflictActual=hasConflict(aa),conflictTarget=hasConflict(tt);
+  const aa=nearAll(actuals),tt=nearAll(targets),pp=nearAll(percents);
+  const ca=chooseCell(aa),ct=chooseCell(tt),cp=chooseCell(pp);
+  const a=ca.item,t=ct.item,p=cp.item;
+  const conflictActual=ca.conflict,conflictTarget=ct.conflict;
   let actual=a?.v??null,target=t?.v??null,percent=p?.v??null;
   if(percent!=null&&percent>1000&&percent<10000)percent/=10;
   // Không suy ngược Thực hiện/Target từ %; giữ số OCR gốc, không tự tạo số liệu.
@@ -879,7 +891,7 @@ async function runOCR(){
     // khiến dữ liệu vừa OCR bị ghi đè trên dashboard bằng số liệu cũ.
     const finalCheck=validatePreview(data.images);
     if(!finalCheck.ok)throw Error('Dữ liệu không còn đạt điều kiện lưu: '+[...finalCheck.pending,...finalCheck.warnings].join(' | '));
-    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:'V3.8'}});
+    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:'V3.9'}});
     // Dùng đúng dữ liệu vừa xác nhận làm nguồn render sau khi SAVE thành công.
     applyGeminiReports(data.images);
     st.textContent='Đã xác nhận và lưu dữ liệu mới • '+(saved.savedAt||new Date().toLocaleString('vi-VN'));
