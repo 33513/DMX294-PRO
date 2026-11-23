@@ -338,8 +338,9 @@ function parseStaff(rows,imageWidth,imageHeight){
     return x>=lo&&x<=hi&&y>=top&&y<=bottom&&(!w._targeted||!w._column||w._column===(lo<.7?'sales':'gift'))&&/^\d{1,3}(?:[.,]\d{1,2})?$/.test(raw);
    }).map(w=>({v:nval(w.t),y:(w.y0+w.y1)/2,conf:Number(w.conf||0),crop:!!w._crop,targeted:!!w._targeted}))
     .filter(w=>Number.isFinite(w.v));
-   // Ô được OCR riêng có ưu tiên cao hơn OCR toàn ảnh, kể cả khi OCR toàn ảnh báo confidence cao giả.
-   candidates.sort((x,y)=>Number(y.targeted)-Number(x.targeted)||Number(y.crop)-Number(x.crop)||Math.abs(x.y-expectedY)-Math.abs(y.y-expectedY)||y.conf-x.conf);
+   // So sánh độ tin cậy của OCR toàn ảnh và crop; không ưu tiên crop một cách tuyệt đối.
+   // Watermark có thể làm OCR crop biến 7 thành 1 hoặc 15 thành 1.
+    candidates.sort((x,y)=>y.conf-x.conf||Number(y.targeted)-Number(x.targeted)||Number(y.crop)-Number(x.crop)||Math.abs(x.y-expectedY)-Math.abs(y.y-expectedY));
    return candidates.length?candidates[0].v:null;
   }
   const m=STAFF_MASTER.find(x=>x.user===a.id);
@@ -419,7 +420,7 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
  const rowsOut=[];
  for(const row of rowAnchors.sort((a,b)=>a.y-b.y)){
   const near=(arr)=>arr.filter(x=>Math.abs(x.y-row.y)<Math.max(30,H*.022))
-   .sort((a,b)=>Number(b.targeted)-Number(a.targeted)||Number(a.crop)-Number(b.crop)||Math.abs(a.y-row.y)-Math.abs(b.y-row.y)||b.conf-a.conf)[0]||null;
+   .sort((a,b)=>b.conf-a.conf||Number(b.targeted)-Number(a.targeted)||Number(b.crop)-Number(a.crop)||Math.abs(a.y-row.y)-Math.abs(b.y-row.y))[0]||null;
   const a=near(actuals),t=near(targets),p=near(percents);
   let actual=a?.v??null,target=t?.v??null,percent=p?.v??null;
   if(percent!=null&&percent>1000&&percent<10000)percent/=10;
@@ -764,6 +765,8 @@ function validatePreview(reports){
   if(storeReport?.store?.salesQd!=null){
    const delta=staffSales-Number(storeReport.store.salesQd);
    reconciliation.push('Tổng DT QĐ nhân viên '+staffSales+' triệu; cửa hàng '+storeReport.store.salesQd+' triệu; chênh '+(delta>0?'+':'')+delta.toFixed(2)+' triệu. Không tự điều chỉnh số.');
+   // Lệch trên 2.5 triệu thì phải đối chiếu từng nhân viên trước khi lưu. Không ép hai tổng bằng nhau.
+   if(Math.abs(delta)>2.5)warnings.push('Tổng doanh thu nhân viên lệch cửa hàng '+delta.toFixed(2)+' triệu (> 2.5 triệu). Kiểm tra bảng từng nhân viên; chưa cho phép lưu.');
   }
   if(storeReport?.store?.installmentQd!=null)reconciliation.push('Trả góp nhân viên '+staffGift+' triệu; KPI trả góp cửa hàng '+storeReport.store.installmentQd+' triệu. Giữ độc lập hai chỉ tiêu.');
  }
@@ -833,10 +836,10 @@ async function runOCR(){
    imageStats.push({name:file.name,originalKB:Math.round(file.size/1024),compressedKB:Math.round(file.size/1024)});
    st.textContent=`Đã đọc ảnh ${i+1}/${fs.length}. Đang kiểm tra dữ liệu…`;
   }
-  const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR V3.4'};
+  const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR V3.5'};
   const v=validatePreview(data.images);
   const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V3.4 • ĐỌC RIÊNG 26 Ô MỖI BẢNG</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V3.5 • ĐỌC RIÊNG 26 Ô MỖI BẢNG</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name||'')}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
