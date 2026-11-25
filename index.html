@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.29-FINAL-LOOKUP-VALIDATION">
-<title>DMX294 PRO • LUXURY Dashboard V3.29</title>
+<meta name="dmx294-version" content="V3.31-LOCKED-MASTER-VALIDATION">
+<meta name="dmx294-build" content="V3.31-LOCKED-MASTER-20261125-B">
+<title>DMX294 PRO • LUXURY Dashboard V3.31</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#eaf1ff 0,transparent 32%),radial-gradient(circle at 95% 10%,#fff4df 0,transparent 25%),var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -210,7 +211,7 @@ nav a{font-size:9px;padding:6px 9px}
 <div class="wrap">
 <header>
  <div class="brand"><div class="mark">D</div><div><h1>DMX 294 <span style="color:#2563eb">PRO</span></h1><p>SALES INTELLIGENCE DASHBOARD • OCR BÁO CÁO • PHÂN TÍCH DOANH THU</p></div></div>
- <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.29 • MASTER LOOKUP • FINAL VALIDATION • 25/11/2026</span></div>
+ <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.31 • MASTER LOOKUP • RUNTIME CHECK • 25/11/2026</span></div>
 </header>
 <nav><a href="#overview">Tổng quan</a><a href="#staff">Nhân viên</a><a href="#race">Thi đua</a><a href="#settings">Data & Target</a></nav>
 <section id="overview">
@@ -243,7 +244,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill">OCR MIỄN PHÍ V3.29 • MASTER LOOKUP</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.31 • MASTER LOOKUP</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -256,6 +257,13 @@ nav a{font-size:9px;padding:6px 9px}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
+// Single source of truth for the runtime/build identity. This diagnostic patch
+// changes version reporting only; OCR algorithms and Master Data remain intact.
+const DMX294_VERSION = 'V3.31';
+const DMX294_BUILD_ID = 'V3.31-LOCKED-MASTER-20261125-B';
+window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
+window.DMX294_VERSION = DMX294_VERSION;
+document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
 const STAFF_MASTER=[
  {user:"258196",name:"Lê Xuân Hải"},{user:"281312",name:"Nguyễn Công Toàn"},
  {user:"18868",name:"Nguyễn Thị Lý"},{user:"168190",name:"Nguyễn Văn Ngoan"},
@@ -327,7 +335,15 @@ function render(){
 }
 function applyTarget(){const v=Number(document.getElementById("targetInput").value);if(!Number.isFinite(v)||v<=0){alert("Target phải lớn hơn 0");return}storeTarget=v;persistDashboard();render()}
 function applyStaffTarget(){let t=Number(document.getElementById("staffTargetInput").value);if(!Number.isFinite(t)||t<0){alert("Vui lòng nhập Target nhân viên hợp lệ.");return}staffTargetDefault=t;staff.forEach(x=>{if(x.sales>0)x.target=t});persistDashboard();render()}
-function resetTargets(){if(!confirm("Xóa toàn bộ dữ liệu đã OCR và target?"))return;localStorage.removeItem("DMX294_DATA_V17_FIX");staff=[];races=[];storeSalesQd=storeInstallmentQd=storeTarget=null;render()}
+function resetTargets(){
+ if(!confirm("Xóa dữ liệu OCR và target đang lưu? Danh mục 7 nhân viên và 39 chương trình sẽ được giữ nguyên."))return;
+ staff=STAFF_MASTER.map(x=>({...x,sales:null,gift:null,target:null}));
+ races=[];storeSalesQd=storeInstallmentQd=storeTarget=null;staffTargetDefault=25;
+ const ti=document.getElementById("targetInput"),si=document.getElementById("staffTargetInput");
+ if(ti)ti.value="";if(si)si.value=String(staffTargetDefault);
+ persistDashboard();render();
+ setMappingStatus("Đã reset dữ liệu OCR; Master Data 7 nhân viên và 39 chương trình vẫn được giữ nguyên.",false);
+}
 // FIX missing utilities in original file
 function normalizeText(s){return String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function parseVNNumber(v){let s=String(v??"").trim().replace(/[^\d.,-]/g,"");if(!s)return NaN;if(s.includes(",")&&s.includes("."))s=s.replace(/\./g,"").replace(",",".");else if(s.includes(","))s=s.replace(",",".");else if((s.match(/\./g)||[]).length>1)s=s.replace(/\./g,"");else if(/\.\d{3}$/.test(s))s=s.replace(/\./g,"");return Number(s)}
@@ -338,6 +354,8 @@ function restoreDashboard(){try{const d=JSON.parse(localStorage.getItem("DMX294_
  const saved=new Map(d.staff.map(x=>[String(x.user),x]));
  staff=STAFF_MASTER.map(m=>{const x=saved.get(m.user)||{};return {...m,sales:x.sales??null,gift:x.gift??null,target:x.target??null}});
 }races=Array.isArray(d.races)?d.races:[];storeSalesQd=d.storeSalesQd??null;storeInstallmentQd=d.storeInstallmentQd??null;storeTarget=d.storeTarget??null;staffTargetDefault=d.staffTargetDefault??25}catch(e){console.warn(e)}}
+document.getElementById('updated').textContent=DMX294_VERSION+' • LOCKED MASTER • '+DMX294_BUILD_ID;
+document.getElementById('ocrBuildBadge').textContent='OCR MIỄN PHÍ '+DMX294_VERSION+' • MASTER LOOKUP';
 restoreDashboard();document.getElementById("targetInput").value=storeTarget??"";document.getElementById("staffTargetInput").value=staffTargetDefault;render();
 const reportInput=document.getElementById("reportImage");window.runOCR=runOCR;window.clearOCR=clearOCR;
 reportInput.addEventListener("change",()=>{const box=document.getElementById("imagePreview");box.innerHTML="";[...reportInput.files].forEach(f=>{const im=document.createElement("img");im.src=URL.createObjectURL(f);im.alt=f.name;im.style.cssText="max-width:150px;max-height:110px;object-fit:contain;border:1px solid #e7ebf2;border-radius:10px;padding:4px";box.appendChild(im)});document.getElementById("ocrStatus").textContent=reportInput.files.length+" ảnh đã chọn."});
@@ -463,7 +481,7 @@ function parseStaff(rows,imageWidth,imageHeight,rowCenters){
 }
 
 function detectTableRowCenters(canvas,scale=1){
- // V3.29: quét tới hết ảnh; bản cũ dừng ở 92% nên làm mất biên cuối DV/ICT.
+ // V3.31: quét tới hết ảnh; bản cũ dừng ở 92% nên làm mất biên cuối DV/ICT.
  // Bảng chuẩn có 13 hàng = 14 biên. Nếu thiếu đúng một biên giữa do đường kẻ mờ,
  // chỉ nội suy tại khoảng cách bất thường lớn; không tự cộng thêm hàng ở cuối ảnh.
  try{
@@ -604,7 +622,7 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
  return rowsOut;
 }
 
-// OCR miễn phí chạy trực tiếp trong trình duyệt bằng Tesseract.js V3.29.
+// OCR miễn phí chạy trực tiếp trong trình duyệt bằng Tesseract.js V3.31.
 // Apps Script chỉ còn dùng cho SAVE/LOAD sau khi người dùng xác nhận preview.
 const GEMINI_OCR_API = "https://script.google.com/macros/s/AKfycbxls0JmAiGNlaDruDdQ4QttVhh1VBAywrJYMgudKeT6pU2sYiBgAAj3v7Rzo0B97VBx/exec";
 
@@ -989,6 +1007,7 @@ function applyGeminiReports(reports){
    if(!master){notes.push('Chương trình ngoài Master Data: '+String(x.group||'')+' / '+String(x.name||x.programId||''));return;}
    if(master.group!==String(x.group||'').toUpperCase()){notes.push('Sai nhóm chương trình: '+master.name);return;}
    if(x.programId&&x.name&&normalizeText(x.name)!==normalizeText(master.name)){notes.push('Mã chương trình và tên OCR không khớp: '+x.programId+' / '+x.name);return;}
+   if(programMap.has(master.programId)){notes.push('Chương trình bị trùng khóa khi áp dụng: '+master.group+' / '+master.name);return;}
    programMap.set(master.programId,{programId:master.programId,group:master.group,name:master.name,actual:numberOrNull(x.actual),target:numberOrNull(x.target),percent:numberOrNull(x.percent)});
   });
   (r.warnings||[]).forEach(w=>notes.push('OCR: '+w));
@@ -1107,7 +1126,7 @@ function validatePreview(reports){
   if(storeReport?.store?.installmentQd!=null)reconciliation.push('Trả góp nhân viên '+staffGift+' triệu; KPI trả góp cửa hàng '+storeReport.store.installmentQd+' triệu. Giữ độc lập hai chỉ tiêu.');
  }
  const complete=hasStore&&hasStaffReport&&hasRaceReport;
- return {staffCount:knownStaffIds.size,staffRows:seenStaffIds.size,programCounts:counts,warnings,pending,reconciliation,hasStore,hasStaffReport,hasRaceReport,
+ return {staffCount:knownStaffIds.size,staffRows:seenStaffIds.size,outsiderCount:[...seenStaffIds].filter(id=>!STAFF_MASTER.some(m=>m.user===id)).length,programCounts:counts,warnings,pending,reconciliation,hasStore,hasStaffReport,hasRaceReport,
   ok:complete&&knownStaffIds.size===7&&Object.values(counts).every(x=>x===13)&&warnings.length===0};
 }
 
@@ -1116,6 +1135,10 @@ async function runOCR(){
  if(!fs.length){alert('Vui lòng chọn 1–5 ảnh báo cáo.');return}
  if(fs.length>5){alert('Chỉ nhận tối đa 5 ảnh mỗi lượt.');return}
  const st=document.getElementById('ocrStatus'),btn=document.querySelector('button[onclick="runOCR()"]');
+ const previewRoot=document.getElementById('ocrResult');
+ // Xóa Preview cũ ngay khi bắt đầu để không hiển thị nhãn của lần chạy trước.
+ if(previewRoot)previewRoot.innerHTML='<div class="panel" style="padding:12px;color:#1d4ed8"><b>ĐANG CHẠY '+DMX294_VERSION+'</b><p>Mã thực thi: '+DMX294_BUILD_ID+'</p><p>Preview cũ đã được xóa. Đang phân tích ảnh mới…</p></div>';
+ st.textContent='Đang chạy OCR '+DMX294_VERSION+' • '+DMX294_BUILD_ID;
  if(btn){btn.disabled=true;btn.textContent='Đang OCR trên máy…'}
  const allReports=[],imageStats=[];
  let worker=null;
@@ -1176,10 +1199,15 @@ async function runOCR(){
    imageStats.push({name:file.name,originalKB:Math.round(file.size/1024),compressedKB:Math.round(file.size/1024)});
    st.textContent=`Đã đọc ảnh ${i+1}/${fs.length}. Đang kiểm tra dữ liệu…`;
   }
-  const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR V3.29'};
+  const data={ok:true,images:allReports,imageStats,engine:'Tesseract.js local OCR '+DMX294_VERSION+' '+DMX294_BUILD_ID};
   const v=validatePreview(data.images);
   const preview=document.getElementById('ocrResult');
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ V3.28 • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu riêng bảng nhân viên:</b> Tổng DT QĐ: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.salesQd)||0),0)} • Tổng trả góp nhân viên: ${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau.</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name||'')}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
+  const previewStaff=allReports.filter(r=>r.reportType==='staff').flatMap(r=>r.staff||[]);
+  const officialStaff=previewStaff.filter(x=>STAFF_MASTER.some(m=>m.user===String(x.userId||'')));
+  const outsiderStaff=previewStaff.filter(x=>!STAFF_MASTER.some(m=>m.user===String(x.userId||'')));
+  const officialSales=officialStaff.reduce((sum,x)=>sum+(Number(x.salesQd)||0),0);
+  const officialGift=officialStaff.reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0);
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ ${DMX294_VERSION} • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p style="color:#64748b;font-size:10px">Mã thực thi: ${DMX294_BUILD_ID}</p><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu nhân viên thuộc Master Data:</b> Tổng DT QĐ: ${fmt(officialSales)} • Tổng trả góp nhân viên: ${fmt(officialGift)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau. ${outsiderStaff.length?`<b>${outsiderStaff.length} dòng ngoài roster không được cộng vào tổng nhân viên chính thức.</b>`:''}</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${previewStaff.map(x=>{const master=STAFF_MASTER.find(m=>m.user===String(x.userId||''));const name=master?esc(master.name):`<b style="color:#b45309">NGOÀI ROSTER</b> · ${esc(x.name||'Tên OCR chưa rõ')}`;return `<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${name}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`}).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
@@ -1189,12 +1217,12 @@ async function runOCR(){
     // khiến dữ liệu vừa OCR bị ghi đè trên dashboard bằng số liệu cũ.
     const finalCheck=validatePreview(data.images);
     if(!finalCheck.ok)throw Error('Dữ liệu không còn đạt điều kiện lưu: '+[...finalCheck.pending,...finalCheck.warnings].join(' | '));
-    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:'V3.29'}});
+    const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:DMX294_VERSION,clientBuild:DMX294_BUILD_ID}});
     // Dùng đúng dữ liệu vừa xác nhận làm nguồn render sau khi SAVE thành công.
     applyGeminiReports(data.images);
     st.textContent='Đã xác nhận và lưu dữ liệu mới • '+(saved.savedAt||new Date().toLocaleString('vi-VN'));
-    setMappingStatus('Đã lưu dữ liệu OCR mới: '+v.staffCount+'/7 nhân viên và 39/39 chương trình.',true);
-    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Dashboard đang hiển thị đúng bộ dữ liệu V3.28 vừa xác nhận; không nạp đè bản LOAD cũ ngay sau khi lưu.</p></div>';
+    setMappingStatus('Đã lưu dữ liệu OCR mới bằng '+DMX294_BUILD_ID+': '+v.staffCount+'/7 nhân viên và 39/39 chương trình.',true);
+    preview.innerHTML='<div class="panel" style="padding:14px;color:#166534"><b>✓ ĐÃ LƯU VÀ ĐỒNG BỘ DASHBOARD</b><p>Dashboard đang hiển thị đúng bộ dữ liệu vừa xác nhận từ '+DMX294_BUILD_ID+'; không nạp đè bản LOAD cũ ngay sau khi lưu.</p></div>';
    }catch(e){cb.disabled=false;cb.textContent='Xác nhận & lưu dữ liệu';alert('Không lưu được: '+e.message)}
   });
   document.getElementById('cancelOCRBtn')?.addEventListener('click',()=>{preview.innerHTML='';setMappingStatus('Đã hủy preview; dữ liệu cũ giữ nguyên.',false)});
