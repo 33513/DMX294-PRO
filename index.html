@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.34-OCR-NUMERIC-CONSISTENCY">
-<meta name="dmx294-build" content="V3.34-OCR-NUMERIC-CONSISTENCY-20261126">
-<title>DMX294 PRO • LUXURY Dashboard V3.34</title>
+<meta name="dmx294-version" content="V3.36-STAFF-COLUMN-MAPPING-FIX">
+<meta name="dmx294-build" content="V3.36-STAFF-COLUMN-MAPPING-FIX-20261126">
+<title>DMX294 PRO • LUXURY Dashboard V3.36</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#eaf1ff 0,transparent 32%),radial-gradient(circle at 95% 10%,#fff4df 0,transparent 25%),var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -211,7 +211,7 @@ nav a{font-size:9px;padding:6px 9px}
 <div class="wrap">
 <header>
  <div class="brand"><div class="mark">D</div><div><h1>DMX 294 <span style="color:#2563eb">PRO</span></h1><p>SALES INTELLIGENCE DASHBOARD • OCR BÁO CÁO • PHÂN TÍCH DOANH THU</p></div></div>
- <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.32 • OCR COLUMN FIX • 26/11/2026</span></div>
+ <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.36 • STAFF COLUMN FIX • 26/11/2026</span></div>
 </header>
 <nav><a href="#overview">Tổng quan</a><a href="#staff">Nhân viên</a><a href="#race">Thi đua</a><a href="#settings">Data & Target</a></nav>
 <section id="overview">
@@ -244,7 +244,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.32 • OCR COLUMN FIX</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.36 • STAFF COLUMN FIX</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -259,8 +259,8 @@ nav a{font-size:9px;padding:6px 9px}
 <script>
 // Single source of truth for the runtime/build identity. This diagnostic patch
 // changes version reporting only; OCR algorithms and Master Data remain intact.
-const DMX294_VERSION = 'V3.35';
-const DMX294_BUILD_ID = 'V3.35-ROW-COLUMN-MAPPING-FIX-20261126';
+const DMX294_VERSION = 'V3.36';
+const DMX294_BUILD_ID = 'V3.36-STAFF-COLUMN-MAPPING-FIX-20261126';
 window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
 window.DMX294_VERSION = DMX294_VERSION;
 document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
@@ -514,7 +514,12 @@ function parseStaff(rows,imageWidth,imageHeight,rowCenters){
    return x<.40&&y>=expectedY-H*.055&&y<=expectedY+H*.035&&/[A-Za-zÀ-ỹ]/.test(txt)&&!/^id:?$/i.test(txt);
   }).sort((x,y)=>x.y0-y.y0||x.x0-y.x0);
   const ocrName=nameWords.map(w=>w.t).join(' ').replace(/\s+/g,' ').trim();
-  const sales=readColumn(.385,.49,'sales'),gift=readColumn(.73,.85,'gift');
+  // Bản đồ cột được đo từ ảnh nguồn S__24068121 (976px):
+  // USER/tên: 0.01–0.30; Số lượng: 0.30–0.44;
+  // DOANH THU QĐ: 0.441–0.579; DT QĐ khoản vay: 0.579–0.716;
+  // DT trả tháng QĐ: 0.716–0.854; DT trả góp QĐ: 0.854–1.00.
+  // Chỉ đọc DT QĐ từ cột doanh thu và trả góp từ cột cuối cùng.
+  const sales=readColumn(.445,.58,'sales'),gift=readColumn(.855,.999,'gift');
   result.push({user:a.id,name:master?.name||ocrName||'USER ngoài roster',sales:sales.value,gift:gift.value,
    salesConflict:sales.conflict,giftConflict:gift.conflict,target:staffTargetDefault,known:!!master});
  }
@@ -665,7 +670,7 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
  return rowsOut;
 }
 
-// OCR miễn phí chạy trực tiếp trong trình duyệt bằng Tesseract.js V3.31.
+// OCR miễn phí chạy trực tiếp trong trình duyệt bằng Tesseract.js; bản vá V3.36 sửa tọa độ cột nhân viên.
 // Apps Script chỉ còn dùng cho SAVE/LOAD sau khi người dùng xác nhận preview.
 const GEMINI_OCR_API = "https://script.google.com/macros/s/AKfycbxls0JmAiGNlaDruDdQ4QttVhh1VBAywrJYMgudKeT6pU2sYiBgAAj3v7Rzo0B97VBx/exec";
 
@@ -838,11 +843,11 @@ async function refineStaffNumericCells(file,words,imageWidth,imageHeight,worker,
   const hasFullGift=(words||[]).some(w=>{
    const b=w.bbox||{},x=((Number(b.x0||0)+Number(b.x1||0))/2)/(Number(imageWidth)||1),y=(Number(b.y0||0)+Number(b.y1||0))/2;
    const raw=String(w.text||'').replace(/\s/g,'').trim();
-   return x>=.73&&x<=.85&&Math.abs(y-Number(center))<=Math.max(24,H*.022)&&/^\d{1,3}(?:[.,]\d{1,2})?$/.test(raw);
+   return x>=.855&&x<=.999&&Math.abs(y-Number(center))<=Math.max(24,H*.022)&&/^\d{1,3}(?:[.,]\d{1,2})?$/.test(raw);
   });
   if(hasFullGift)continue;
   const y0=Math.max(0,(Number(center)-H*.019)/H),y1=Math.min(1,(Number(center)+H*.019)/H);
-  const cell=await preprocessRegion(file,.73,y0,.85,y1,12);
+  const cell=await preprocessRegion(file,.855,y0,.999,y1,12);
   await worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM.SINGLE_LINE,preserve_interword_spaces:'1',tessedit_char_whitelist:'0123456789.,-'});
   const result=await worker.recognize(cell.canvas);
   for(const w of result.data?.words||[]){
@@ -1141,12 +1146,22 @@ function validatePreview(reports){
    else if(!Number.isFinite(Number(x.target))||Number(x.target)<0)addError('Target không hợp lệ: '+master.name);
    if(x.percent==null||x.percent==='')addWarning('Chưa đọc được % HT nguồn: '+master.name+'. Sẽ lưu null, không tự tính thay thế.');
    else if(!Number.isFinite(Number(x.percent))||Number(x.percent)<0)addError('% HT không hợp lệ: '+master.name);
-   // Cross-check nguồn: % HT phải tương thích với Thực hiện / Target.
-   // Chỉ kiểm tra, tuyệt đối không tự ghi đè % OCR hoặc tự sửa số tiền.
+   // Cross-check theo độ chính xác hiển thị của ảnh:
+   // Thực hiện/Target thường được làm tròn 2 chữ số, % làm tròn 1 chữ số.
+   // So sánh trực tiếp a/t với % OCR tạo false-positive khi nguồn dùng số chưa làm tròn.
+   // Chỉ cảnh báo khi % OCR nằm ngoài toàn bộ khoảng có thể có do làm tròn.
+   // Không tự tính lại, không ghi đè số tiền hoặc % OCR.
    if(x.actual!=null&&x.target!=null&&Number(x.target)>0&&x.percent!=null&&Number.isFinite(Number(x.percent))){
-    const calculated=Number(x.actual)/Number(x.target)*100;
-    const delta=Math.abs(calculated-Number(x.percent));
-    if(delta>0.51)addError('MÂU THUẪN SỐ LIỆU: '+master.name+' — % OCR '+Number(x.percent).toFixed(1)+'% nhưng Thực hiện/Target tương ứng '+calculated.toFixed(1)+'% (lệch '+delta.toFixed(1)+' điểm). Cần đối chiếu ảnh gốc; hệ thống không tự sửa.');
+    const a=Number(x.actual),t=Number(x.target),p=Number(x.percent);
+    const ae=0.005,te=0.005;
+    const low=Math.max(0,a-ae)/Math.max(Number.EPSILON,t+te)*100;
+    const high=(a+ae)/Math.max(Number.EPSILON,t-te)*100;
+    const pe=Number.isInteger(p)?0.5:0.05;
+    const compatible=(p+pe)>=low&&(p-pe)<=high;
+    if(!compatible){
+     const calculated=a/t*100;
+     addError('MÂU THUẪN SỐ LIỆU: '+master.name+' — % OCR '+p.toFixed(1)+'% nằm ngoài khoảng hợp lý do làm tròn Thực hiện/Target (tỷ lệ từ '+low.toFixed(1)+'% đến '+high.toFixed(1)+'%; tỷ lệ từ số hiển thị '+calculated.toFixed(1)+'%). Cần đối chiếu ảnh gốc; hệ thống không tự sửa.');
+    }
    }
    if(x._ocrConflict)addError('Kết quả OCR mâu thuẫn ở chương trình '+master.name+'.');
    if(x.actual!=null&&x.target!=null&&Number(x.target)===0&&Number(x.actual)>0)addWarning('Target bằng 0 nhưng Thực hiện lớn hơn 0, cần đối chiếu: '+master.name);
@@ -1207,7 +1222,7 @@ async function runOCR(){
  const previewRoot=document.getElementById('ocrResult');
  // Xóa Preview cũ ngay khi bắt đầu để không hiển thị nhãn của lần chạy trước.
  if(previewRoot)previewRoot.innerHTML='<div class="panel" style="padding:12px;color:#1d4ed8"><b>ĐANG CHẠY '+DMX294_VERSION+'</b><p>Mã thực thi: '+DMX294_BUILD_ID+'</p><p>Preview cũ đã được xóa. Đang phân tích ảnh mới…</p></div>';
- st.textContent='Đang chạy OCR '+DMX294_VERSION+' • '+DMX294_BUILD_ID;
+ st.textContent='Đang chạy OCR '+DMX294_VERSION+' • '+DMX294_BUILD_ID+' • STAFF COLS 44.5–58% / 85.5–99.9%';
  if(btn){btn.disabled=true;btn.textContent='Đang OCR trên máy…'}
  const allReports=[],imageStats=[];
  let worker=null;
