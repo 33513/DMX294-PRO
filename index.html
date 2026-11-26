@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.33-VALIDATION-SAVE-HARDENED">
-<meta name="dmx294-build" content="V3.33-VALIDATION-SAVE-HARDENED-20261126">
-<title>DMX294 PRO • LUXURY Dashboard V3.33</title>
+<meta name="dmx294-version" content="V3.34-OCR-NUMERIC-CONSISTENCY">
+<meta name="dmx294-build" content="V3.34-OCR-NUMERIC-CONSISTENCY-20261126">
+<title>DMX294 PRO • LUXURY Dashboard V3.34</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#eaf1ff 0,transparent 32%),radial-gradient(circle at 95% 10%,#fff4df 0,transparent 25%),var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -259,8 +259,8 @@ nav a{font-size:9px;padding:6px 9px}
 <script>
 // Single source of truth for the runtime/build identity. This diagnostic patch
 // changes version reporting only; OCR algorithms and Master Data remain intact.
-const DMX294_VERSION = 'V3.33';
-const DMX294_BUILD_ID = 'V3.33-VALIDATION-SAVE-HARDENED-20261126';
+const DMX294_VERSION = 'V3.34';
+const DMX294_BUILD_ID = 'V3.34-OCR-NUMERIC-CONSISTENCY-20261126';
 window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
 window.DMX294_VERSION = DMX294_VERSION;
 document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
@@ -362,7 +362,45 @@ reportInput.addEventListener("change",()=>{const box=document.getElementById("im
 function preprocessImage(file,scale=2){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve(c)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error("Không đọc được ảnh"))};img.src=url})}
 function preprocessRegion(file,x0,y0,x1,y1,scale=2.5){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const sx=Math.round(img.naturalWidth*x0),sy=Math.round(img.naturalHeight*y0),sw=Math.round(img.naturalWidth*(x1-x0)),sh=Math.round(img.naturalHeight*(y1-y0));const c=document.createElement('canvas');c.width=Math.round(sw*scale);c.height=Math.round(sh*scale);const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);URL.revokeObjectURL(url);resolve({canvas:c,offsetX:sx,offsetY:sy,scale})}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Không đọc được vùng ảnh'))};img.src=url})}
 const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase();
-function nval(s){let z=String(s||"").replace(/[^0-9.,-]/g,"").replace(/[.,]+$/,"");if(!z)return null;if(z.includes(".")&&z.includes(","))z=z.replace(/\./g,"").replace(",",".");else if(z.includes(","))z=z.replace(",",".");return Number(z)}
+function nval(s){
+ // Parse số OCR theo cả hai quy ước: 1,281.94 (US) và 1.281,94 (EU).
+ // Khi có cả dấu phẩy và dấu chấm, dấu đứng cuối là dấu thập phân nếu
+ // phần sau có 1–2 chữ số; dấu còn lại là phân cách hàng nghìn.
+ let z=String(s??'').trim().replace(/[^0-9.,+\-]/g,'').replace(/^[+,]+|[+,]+$/g,'');
+ if(!z||!/[0-9]/.test(z))return null;
+ const comma=z.lastIndexOf(','),dot=z.lastIndexOf('.');
+ if(comma>=0&&dot>=0){
+  if(dot>comma){ // 1,281.94
+   const tail=z.length-dot-1;
+   if(tail<1||tail>2)return null;
+   z=z.replace(/,/g,'');
+  }else{ // 1.281,94
+   const tail=z.length-comma-1;
+   if(tail<1||tail>2)return null;
+   z=z.replace(/\./g,'').replace(',', '.');
+  }
+ }else if(comma>=0){
+  const parts=z.split(',');
+  if(parts.length>2){
+   const last=parts.pop();
+   if(last.length<1||last.length>2)return null;
+   z=parts.join('')+'.'+last;
+  }else if(parts[1].length===3&&parts[0].length>=1){z=parts.join('');}
+  else if(parts[1].length>=1&&parts[1].length<=2)z=parts[0]+'.'+parts[1];
+  else return null;
+ }else if(dot>=0){
+  const parts=z.split('.');
+  if(parts.length>2){
+   const last=parts.pop();
+   if(last.length<1||last.length>2)return null;
+   z=parts.join('')+'.'+last;
+  }else if(parts[1].length===3&&parts[0].length>=1){z=parts.join('');}
+  else if(parts[1].length>=1&&parts[1].length<=2)z=parts[0]+'.'+parts[1];
+  else return null;
+ }
+ const n=Number(z);
+ return Number.isFinite(n)?n:null;
+}
 function groupWords(words){const ws=(words||[]).filter(w=>w.text&&w.bbox&&w.confidence>=0).map(w=>({t:w.text.trim(),x:(w.bbox.x0+w.bbox.x1)/2,y:(w.bbox.y0+w.bbox.y1)/2,x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0,y1:w.bbox.y1,conf:Number(w.confidence||0),_crop:!!w._crop,_targeted:!!w._targeted,_column:w._column||null,_threshold:w._threshold??null,_mode:w._mode||null}));ws.sort((a,b)=>a.y-b.y||a.x-b.x);let rows=[];for(const w of ws){let r=rows.find(r=>Math.abs(r.y-w.y)<Math.max(12,(w.y1-w.y0)*.6));if(!r){r={y:w.y,words:[]};rows.push(r)}r.words.push(w);r.y=r.words.reduce((a,b)=>a+b.y,0)/r.words.length}return rows.sort((a,b)=>a.y-b.y).map(r=>({...r,words:r.words.sort((a,b)=>a.x-b.x),text:r.words.map(w=>w.t).join(" ")}))}
 function parseStore(text,words,imageWidth,imageHeight){
  const W=imageWidth||2640,H=imageHeight||3224;
@@ -1102,7 +1140,14 @@ function validatePreview(reports){
    if(x.target==null||x.target==='')addWarning('Chưa đọc được Target: '+master.name+'. Sẽ lưu null, không tự điền.');
    else if(!Number.isFinite(Number(x.target))||Number(x.target)<0)addError('Target không hợp lệ: '+master.name);
    if(x.percent==null||x.percent==='')addWarning('Chưa đọc được % HT nguồn: '+master.name+'. Sẽ lưu null, không tự tính thay thế.');
-   else if(!Number.isFinite(Number(x.percent)))addError('% HT không hợp lệ: '+master.name);
+   else if(!Number.isFinite(Number(x.percent))||Number(x.percent)<0)addError('% HT không hợp lệ: '+master.name);
+   // Cross-check nguồn: % HT phải tương thích với Thực hiện / Target.
+   // Chỉ kiểm tra, tuyệt đối không tự ghi đè % OCR hoặc tự sửa số tiền.
+   if(x.actual!=null&&x.target!=null&&Number(x.target)>0&&x.percent!=null&&Number.isFinite(Number(x.percent))){
+    const calculated=Number(x.actual)/Number(x.target)*100;
+    const delta=Math.abs(calculated-Number(x.percent));
+    if(delta>0.51)addError('MÂU THUẪN SỐ LIỆU: '+master.name+' — % OCR '+Number(x.percent).toFixed(1)+'% nhưng Thực hiện/Target tương ứng '+calculated.toFixed(1)+'% (lệch '+delta.toFixed(1)+' điểm). Cần đối chiếu ảnh gốc; hệ thống không tự sửa.');
+   }
    if(x._ocrConflict)addError('Kết quả OCR mâu thuẫn ở chương trình '+master.name+'.');
    if(x.actual!=null&&x.target!=null&&Number(x.target)===0&&Number(x.actual)>0)addWarning('Target bằng 0 nhưng Thực hiện lớn hơn 0, cần đối chiếu: '+master.name);
   });
