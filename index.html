@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.32-OCR-COLUMN-VALIDATION-FIX">
-<meta name="dmx294-build" content="V3.32-OCR-COLUMN-VALIDATION-FIX-20261126">
-<title>DMX294 PRO • LUXURY Dashboard V3.32</title>
+<meta name="dmx294-version" content="V3.33-VALIDATION-SAVE-HARDENED">
+<meta name="dmx294-build" content="V3.33-VALIDATION-SAVE-HARDENED-20261126">
+<title>DMX294 PRO • LUXURY Dashboard V3.33</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#eaf1ff 0,transparent 32%),radial-gradient(circle at 95% 10%,#fff4df 0,transparent 25%),var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -18,7 +18,7 @@ nav{display:flex;gap:8px;overflow:auto;padding:0 0 16px;scrollbar-width:none}nav
 section{margin:20px 0 28px;scroll-margin-top:16px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:13px}.eyebrow{font-size:10px;letter-spacing:1.7px;text-transform:uppercase;color:var(--gold);font-weight:800}.section-head h2{margin:3px 0 0;font-size:clamp(18px,2vw,23px);letter-spacing:-.5px}.section-head p{margin:0;color:var(--muted);font-size:12px}
 .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px}.kpi{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff,#fbfcff);border:1px solid #e6eaf2;border-radius:19px;padding:17px 17px 15px;box-shadow:var(--shadow);min-height:145px}.kpi:after{content:"";position:absolute;right:-30px;top:-40px;width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#dbeafe66,#fff0)}.k-label{font-size:12px;color:#68768d;font-weight:700;display:flex;align-items:center;gap:8px}.ico{width:27px;height:27px;border-radius:9px;background:#edf4ff;color:#2563eb;display:grid;place-items:center;font-size:14px}.k-value{font-size:clamp(24px,3vw,34px);font-weight:850;letter-spacing:-1.2px;margin:13px 0 5px;line-height:1.1}.k-foot{font-size:11px;color:#8b97aa}.kpi.gold .ico{background:#fbf5e9;color:#b58a35}.kpi.green .ico{background:#e9fbf3;color:#059669}.kpi.red .ico{background:#fff0f0;color:#dc2626}
 .panel{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}.panel-top{padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line)}.panel-top h3{margin:0;font-size:15px}.pill{font-size:11px;padding:5px 9px;border-radius:99px;background:#eff5ff;color:#2563eb;font-weight:750}
-.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.formbox{padding:17px}.formbox label{display:block;font-size:12px;color:#64748b;font-weight:700;margin-bottom:7px}.formbox input{width:100%;padding:12px;border:1px solid #dce3ee;border-radius:12px;background:#fbfcff;color:var(--ink);font:inherit;outline:none}.formbox input:focus{border-color:#93b4ff;box-shadow:0 0 0 3px #2563eb12}.formbox small{display:block;color:#9aa5b6;margin-top:6px;font-size:11px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;background:linear-gradient(135deg,#2563eb,#4f8df8);color:#fff;font-weight:750;padding:11px 16px;border-radius:12px;box-shadow:0 8px 18px #2563eb25;cursor:pointer}.btn.secondary{background:#fff;color:#52627b;border:1px solid var(--line);box-shadow:none}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.formbox{padding:17px}.formbox label{display:block;font-size:12px;color:#64748b;font-weight:700;margin-bottom:7px}.formbox input{width:100%;padding:12px;border:1px solid #dce3ee;border-radius:12px;background:#fbfcff;color:var(--ink);font:inherit;outline:none}.formbox input:focus{border-color:#93b4ff;box-shadow:0 0 0 3px #2563eb12}.formbox small{display:block;color:#9aa5b6;margin-top:6px;font-size:11px}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;background:linear-gradient(135deg,#2563eb,#4f8df8);color:#fff;font-weight:750;padding:11px 16px;border-radius:12px;box-shadow:0 8px 18px #2563eb25;cursor:pointer}.btn.secondary{background:#fff;color:#52627b;border:1px solid var(--line);box-shadow:none}.btn:disabled{background:#e2e8f0!important;color:#64748b!important;box-shadow:none!important;border:1px solid #cbd5e1!important;cursor:not-allowed;opacity:1}.validation-errors{color:#991b1b}.validation-warnings{color:#92400e}.validation-ok{color:#166534}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
 .table-wrap{overflow:auto;-webkit-overflow-scrolling:touch}table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px;font-size:13px}th{background:#f8faff;color:#68768d;font-size:11px;letter-spacing:.35px;text-align:left;padding:13px 14px;white-space:nowrap;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1}td{padding:13px 14px;border-bottom:1px solid #edf0f5;white-space:nowrap}tbody tr:hover{background:#f9fbff}td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:650}.user{font-size:11px;color:#8a96aa}.name{font-weight:750}.percent{font-weight:850}.positive{color:var(--green)}.negative{color:var(--red)}.neutral{color:#64748b}.bar{height:6px;background:#edf1f7;border-radius:99px;overflow:hidden;margin-top:6px;min-width:70px}.bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#60a5fa,#2563eb)}
 .race-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.race-panel{min-width:0}.race-table{min-width:0;width:100%;table-layout:fixed;font-size:10px}.race-table th{padding:7px 4px;font-size:9px;letter-spacing:0}.race-table td{padding:7px 4px;white-space:normal;overflow-wrap:anywhere}.race-table td:last-child{text-align:right;white-space:nowrap}.race-table .name{font-size:10px;line-height:1.25}.empty{padding:26px;text-align:center;color:#9aa5b6;font-size:13px}.footnote{font-size:11px;color:#8b97aa;padding:12px 16px}
 @media(max-width:1050px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -259,8 +259,8 @@ nav a{font-size:9px;padding:6px 9px}
 <script>
 // Single source of truth for the runtime/build identity. This diagnostic patch
 // changes version reporting only; OCR algorithms and Master Data remain intact.
-const DMX294_VERSION = 'V3.32';
-const DMX294_BUILD_ID = 'V3.32-OCR-COLUMN-VALIDATION-FIX-20261126';
+const DMX294_VERSION = 'V3.33';
+const DMX294_BUILD_ID = 'V3.33-VALIDATION-SAVE-HARDENED-20261126';
 window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
 window.DMX294_VERSION = DMX294_VERSION;
 document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
@@ -1049,9 +1049,18 @@ async function apiCall(action,payload={}){
  }catch(e){if(!settled){settled=true;form.remove();iframe.remove()}throw e}
 }
 function validatePreview(reports){
- const seenStaffIds=new Set(),knownStaffIds=new Set(),programIds=new Set(),warnings=[],pending=[],reconciliation=[];
+ const seenStaffIds=new Set(),knownStaffIds=new Set(),programIds=new Set();
+ const errors=[],warnings=[],pending=[],reconciliation=[];
  const reportTypeCounts={store:0,staff:0,race:0},raceSourceCounts={CE:0,DV:0,ICT:0};
  let hasStore=false,hasStaffReport=false,hasRaceReport=false;
+ const addError=m=>{if(m&&!errors.includes(m))errors.push(m)};
+ const addWarning=m=>{if(m&&!warnings.includes(m))warnings.push(m)};
+ const addOcrMessage=(message,reportType)=>{
+  const m=String(message||'');
+  // Target/% thi đua không đọc được được lưu null, tuyệt đối không tự suy diễn.
+  if(reportType==='race'&&(/chưa đọc được target/i.test(m)||/chưa đọc được %\s*ht/i.test(m)||/chưa đọc được % ht nguồn/i.test(m))){addWarning(m);return;}
+  addError(m);
+ };
  (reports||[]).forEach(r=>{
   const type=String(r.reportType||'unknown').toLowerCase();
   if(Object.prototype.hasOwnProperty.call(reportTypeCounts,type))reportTypeCounts[type]++;
@@ -1061,61 +1070,68 @@ function validatePreview(reports){
    hasRaceReport=true;
    const sourceGroups=new Set((r.programs||[]).map(x=>String(x.group||'').toUpperCase()).filter(g=>Object.prototype.hasOwnProperty.call(raceSourceCounts,g)));
    sourceGroups.forEach(g=>raceSourceCounts[g]++);
-   if(sourceGroups.size>1)warnings.push('Một ảnh thi đua chứa nhiều nhóm dữ liệu; cần tách/kiểm tra nguồn ảnh.');
+   if(sourceGroups.size!==1)addError('Mỗi ảnh thi đua phải chứa đúng một nhóm CE, DV hoặc ICT.');
   }
-  if(type==='unknown')warnings.push('Không phân loại được loại ảnh '+(r.sourceImage||''));
-  (r.warnings||[]).forEach(w=>warnings.push((r.sourceImage||'Ảnh')+': '+w));
+  if(type==='unknown')addError('Không phân loại được loại ảnh '+(r.sourceImage||'')+'.');
+  (r.warnings||[]).forEach(w=>addOcrMessage((r.sourceImage||'Ảnh')+': '+w,type));
   (r.staff||[]).forEach(x=>{
    const id=String(x.userId||'').trim();
-   if(!id){warnings.push('Có dòng nhân viên thiếu USER ID.');return;}
-   if(seenStaffIds.has(id))warnings.push('USER ID trùng: '+id);
+   if(!id){addError('Có dòng nhân viên thiếu USER ID.');return;}
+   if(seenStaffIds.has(id))addError('USER ID trùng: '+id);
    seenStaffIds.add(id);
    const master=STAFF_MASTER.find(m=>m.user===id);
-   // Dòng ngoài roster được giữ để hiển thị đối chiếu, không cộng vào 7 NV
-   // chính thức và không tự thêm vào Master Data; bản thân dòng này không khóa lưu.
+   // ID ngoài roster được giữ để đối chiếu, không cộng vào nhân sự chính thức.
    if(!master)return;
    knownStaffIds.add(id);
-   if(x.salesQd==null)warnings.push('Chưa đọc được doanh thu QĐ của USER '+id);
-   if(x.installmentQd==null)warnings.push('Chưa đọc được trả góp QĐ của USER '+id);
-   if(x._salesConflict)warnings.push('OCR mâu thuẫn doanh thu QĐ của USER '+id+'.');
-   if(x._giftConflict)warnings.push('OCR mâu thuẫn trả góp QĐ của USER '+id+'.');
+   if(x.salesQd==null||!Number.isFinite(Number(x.salesQd)))addError('Chưa đọc được doanh thu QĐ hợp lệ của USER '+id+'.');
+   if(x.installmentQd==null||!Number.isFinite(Number(x.installmentQd)))addError('Chưa đọc được trả góp QĐ hợp lệ của USER '+id+'.');
+   if(x._salesConflict)addError('OCR mâu thuẫn doanh thu QĐ của USER '+id+'.');
+   if(x._giftConflict)addError('OCR mâu thuẫn trả góp QĐ của USER '+id+'.');
   });
   (r.programs||[]).forEach(x=>{
    const g=String(x.group||'').toUpperCase(),master=lookupProgram(g,x.programId||x.name);
-   if(!master){warnings.push('Chương trình không khớp Master Data: '+g+' / '+String(x.name||x.programId||'không tên'));return;}
-   if(master.group!==g){warnings.push('Chương trình sai nhóm: '+master.name+' (ảnh '+g+', Master '+master.group+').');return;}
+   if(!master){addError('Chương trình không khớp Master Data: '+g+' / '+String(x.name||x.programId||'không tên'));return;}
+   if(master.group!==g){addError('Chương trình sai nhóm: '+master.name+' (ảnh '+g+', Master '+master.group+').');return;}
    if(x.programId&&x.name&&normalizeText(x.name)!==normalizeText(master.name)){
-    warnings.push('Mã chương trình và tên OCR không khớp nhau: '+x.programId+' / '+x.name+'.');return;
+    addError('Mã chương trình và tên OCR không khớp nhau: '+x.programId+' / '+x.name+'.');return;
    }
    const key=master.programId;
-   if(programIds.has(key))warnings.push('Chương trình trùng: '+master.group+' / '+master.name);
+   if(programIds.has(key))addError('Chương trình trùng: '+master.group+' / '+master.name);
    programIds.add(key);
-   if(x.actual==null)warnings.push('Chưa đọc được Thực hiện: '+master.name);
-   if(x.target==null)warnings.push('Chưa đọc được Target: '+master.name);
-   if(x.percent==null)warnings.push('Chưa đọc được % HT nguồn: '+master.name+'. Không tự tính thay thế.');
-   if(x._ocrConflict)warnings.push('Kết quả OCR mâu thuẫn ở chương trình '+master.name+'.');
-   if(x.actual!=null&&x.target!=null&&Number(x.target)===0&&Number(x.actual)>0)warnings.push('Target bằng 0 nhưng Thực hiện lớn hơn 0, cần đối chiếu: '+master.name);
+   if(x.actual==null||!Number.isFinite(Number(x.actual)))addError('Chưa đọc được Thực hiện hợp lệ: '+master.name);
+   if(x.target==null||x.target==='')addWarning('Chưa đọc được Target: '+master.name+'. Sẽ lưu null, không tự điền.');
+   else if(!Number.isFinite(Number(x.target))||Number(x.target)<0)addError('Target không hợp lệ: '+master.name);
+   if(x.percent==null||x.percent==='')addWarning('Chưa đọc được % HT nguồn: '+master.name+'. Sẽ lưu null, không tự tính thay thế.');
+   else if(!Number.isFinite(Number(x.percent)))addError('% HT không hợp lệ: '+master.name);
+   if(x._ocrConflict)addError('Kết quả OCR mâu thuẫn ở chương trình '+master.name+'.');
+   if(x.actual!=null&&x.target!=null&&Number(x.target)===0&&Number(x.actual)>0)addWarning('Target bằng 0 nhưng Thực hiện lớn hơn 0, cần đối chiếu: '+master.name);
   });
  });
  const counts={CE:0,DV:0,ICT:0};
  for(const id of programIds){const m=RACE_BY_ID.get(id);if(m)counts[m.group]++;}
- if(reportTypeCounts.store>1)warnings.push('Có nhiều hơn một ảnh tổng quan cửa hàng; không xác định được nguồn KPI duy nhất.');
- if(reportTypeCounts.staff>1)warnings.push('Có nhiều hơn một ảnh nhân viên; cần gộp/đối chiếu trước khi lưu.');
- Object.keys(raceSourceCounts).forEach(g=>{if(raceSourceCounts[g]>1)warnings.push('Có nhiều ảnh nguồn cho nhóm '+g+'; phát hiện nguồn trùng/không duy nhất.');});
+ if(reportTypeCounts.store!==1)addError('Cần đúng 1 ảnh báo cáo tổng quan cửa hàng; hiện có '+reportTypeCounts.store+'.');
+ if(reportTypeCounts.staff!==1)addError('Cần đúng 1 ảnh báo cáo nhân viên; hiện có '+reportTypeCounts.staff+'.');
+ if(reportTypeCounts.race!==3)addError('Cần đúng 3 ảnh thi đua CE/DV/ICT; hiện có '+reportTypeCounts.race+'.');
+ Object.keys(raceSourceCounts).forEach(g=>{if(raceSourceCounts[g]!==1)addError('Cần đúng 1 ảnh nguồn cho nhóm '+g+'; hiện có '+raceSourceCounts[g]+'.');});
  if(!hasStore)pending.push('Chưa có ảnh báo cáo tổng quan cửa hàng.');
- else{const sr=(reports||[]).find(r=>r.reportType==='store'&&r.store);['salesQd','installmentQd','targetDay'].forEach(k=>{if(sr.store[k]==null)warnings.push('Ảnh tổng quan chưa đọc được '+k+'.')});}
+ else{
+  const sr=(reports||[]).find(r=>r.reportType==='store'&&r.store);
+  ['salesQd','installmentQd','targetDay'].forEach(k=>{
+   if(sr.store[k]==null||!Number.isFinite(Number(sr.store[k])))addError('Ảnh tổng quan chưa đọc được '+k+'.');
+  });
+ }
  if(!hasStaffReport)pending.push('Đang chờ ảnh báo cáo nhân viên; chưa kiểm tra roster 7 người.');
  else{
-  STAFF_MASTER.filter(x=>!knownStaffIds.has(x.user)).forEach(x=>warnings.push('Thiếu nhân viên '+x.user+' '+x.name));
-  if(knownStaffIds.size!==7)warnings.push('Báo cáo mới nhận diện '+knownStaffIds.size+'/7 USER ID thuộc roster chuẩn. Tổng ID đọc được: '+seenStaffIds.size+'.');
+  STAFF_MASTER.filter(x=>!knownStaffIds.has(x.user)).forEach(x=>addError('Thiếu nhân viên '+x.user+' '+x.name));
+  if(knownStaffIds.size!==7)addError('Báo cáo mới nhận diện '+knownStaffIds.size+'/7 USER ID thuộc roster chuẩn. Tổng ID đọc được: '+seenStaffIds.size+'.');
  }
  if(!hasRaceReport)pending.push('Đang chờ ảnh báo cáo thi đua CE/DV/ICT; chưa kiểm tra 39 chương trình.');
  else{
   Object.keys(raceGroups).forEach(g=>{
-   if(counts[g]!==13)warnings.push('Nhóm '+g+' mới ánh xạ được '+counts[g]+'/13 chương trình duy nhất.');
+   if(counts[g]!==13)addError('Nhóm '+g+' mới ánh xạ được '+counts[g]+'/13 chương trình duy nhất.');
    raceGroups[g].forEach(name=>{
     const master=RACE_BY_KEY.get(g+'|'+normalizeText(name));
-    if(master&&!programIds.has(master.programId))warnings.push('Thiếu chương trình chuẩn '+g+': '+name);
+    if(master&&!programIds.has(master.programId))addError('Thiếu chương trình chuẩn '+g+': '+name);
    });
   });
  }
@@ -1134,8 +1150,8 @@ function validatePreview(reports){
   if(storeReport?.store?.installmentQd!=null)reconciliation.push('Trả góp nhân viên '+staffGift+' triệu; KPI trả góp cửa hàng '+storeReport.store.installmentQd+' triệu. Giữ độc lập hai chỉ tiêu.');
  }
  const complete=hasStore&&hasStaffReport&&hasRaceReport;
- return {staffCount:knownStaffIds.size,staffRows:seenStaffIds.size,outsiderCount:[...seenStaffIds].filter(id=>!STAFF_MASTER.some(m=>m.user===id)).length,programCounts:counts,warnings,pending,reconciliation,hasStore,hasStaffReport,hasRaceReport,
-  ok:complete&&knownStaffIds.size===7&&Object.values(counts).every(x=>x===13)&&warnings.length===0};
+ return {staffCount:knownStaffIds.size,staffRows:seenStaffIds.size,outsiderCount:[...seenStaffIds].filter(id=>!STAFF_MASTER.some(m=>m.user===id)).length,programCounts:counts,errors,warnings,pending,reconciliation,hasStore,hasStaffReport,hasRaceReport,
+  ok:complete&&knownStaffIds.size===7&&Object.values(counts).every(x=>x===13)&&errors.length===0};
 }
 
 async function runOCR(){
@@ -1215,7 +1231,7 @@ async function runOCR(){
   const outsiderStaff=previewStaff.filter(x=>!STAFF_MASTER.some(m=>m.user===String(x.userId||'')));
   const officialSales=officialStaff.reduce((sum,x)=>sum+(Number(x.salesQd)||0),0);
   const officialGift=officialStaff.reduce((sum,x)=>sum+(Number(x.installmentQd)||0),0);
-  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ ${DMX294_VERSION} • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p style="color:#64748b;font-size:10px">Mã thực thi: ${DMX294_BUILD_ID}</p><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu nhân viên thuộc Master Data:</b> Tổng DT QĐ: ${fmt(officialSales)} • Tổng trả góp nhân viên: ${fmt(officialGift)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau. ${outsiderStaff.length?`<b>${outsiderStaff.length} dòng ngoài roster không được cộng vào tổng nhân viên chính thức.</b>`:''}</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${previewStaff.map(x=>{const master=STAFF_MASTER.find(m=>m.user===String(x.userId||''));const name=master?esc(master.name):`<b style="color:#b45309">NGOÀI ROSTER</b> · ${esc(x.name||'Tên OCR chưa rõ')}`;return `<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${name}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`}).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style=\"color:#1d4ed8\">Đối chiếu: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li>'+esc(x)+'</li>').join('')||(!v.pending.length?'<li>Đủ dữ liệu theo kiểm tra sơ bộ.</li>':'')}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'':'<p style="color:#b91c1c">Dữ liệu chưa đủ hoặc cần kiểm tra. Dashboard cũ được giữ nguyên, không lưu.</p>'}</div>`;
+  preview.innerHTML=`<div class="panel" style="padding:14px"><b>PREVIEW OCR MIỄN PHÍ ${DMX294_VERSION} • KIỂM TRA TỪNG Ô TRƯỚC KHI LƯU</b><p style="color:#64748b;font-size:10px">Mã thực thi: ${DMX294_BUILD_ID}</p><p>Nhân viên: <b>${v.staffCount}/7</b> • CE: <b>${v.programCounts.CE}/13</b> • DV: <b>${v.programCounts.DV}/13</b> • ICT: <b>${v.programCounts.ICT}/13</b></p><p>${imageStats.map((x,i)=>`Ảnh ${i+1}: ${esc(x.name)} (${x.originalKB} KB) • Loại: ${esc(allReports[i].reportType)}`).join('<br>')}</p><p><b>Chỉ tiêu cửa hàng nhận diện:</b> ${allReports.filter(r=>r.reportType==='store').map(r=>`DT QĐ: ${r.store?.salesQd??'Chưa đọc'} • Trả góp KPI cửa hàng: ${r.store?.installmentQd??'Chưa đọc'} • Target ngày: ${r.store?.targetDay??'Chưa đọc'}`).join('<br>')||'Chưa nhận diện ảnh tổng quan'}</p><p><b>Đối chiếu nhân viên thuộc Master Data:</b> Tổng DT QĐ: ${fmt(officialSales)} • Tổng trả góp nhân viên: ${fmt(officialGift)}. Hai số trả góp nhân viên và KPI cửa hàng được giữ độc lập, không ép bằng nhau. ${outsiderStaff.length?`<b>${outsiderStaff.length} dòng ngoài roster không được cộng vào tổng nhân viên chính thức.</b>`:''}</p><details open><summary>Kiểm tra chi tiết nhân viên (USER • DT QĐ • Trả góp QĐ)</summary><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:420px"><thead><tr><th style="text-align:left;padding:6px">USER</th><th style="text-align:left;padding:6px">NHÂN VIÊN</th><th style="text-align:right;padding:6px">DT QĐ</th><th style="text-align:right;padding:6px">TRẢ GÓP QĐ</th></tr></thead><tbody>${previewStaff.map(x=>{const master=STAFF_MASTER.find(m=>m.user===String(x.userId||''));const name=master?esc(master.name):`<b style="color:#b45309">NGOÀI ROSTER</b> · ${esc(x.name||'Tên OCR chưa rõ')}`;return `<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.userId)}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${name}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.salesQd==null?'—':fmt(x.salesQd)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.installmentQd==null?'—':fmt(x.installmentQd)}</td></tr>`}).join('')}</tbody></table></div></details><ul>${v.pending.map(x=>'<li style="color:#64748b">'+esc(x)+'</li>').join('')}${v.errors.map(x=>'<li class="validation-errors">CẦN SỬA: '+esc(x)+'</li>').join('')}${v.warnings.map(x=>'<li class="validation-warnings">LƯU Ý: '+esc(x)+'</li>').join('')}${v.reconciliation.map(x=>'<li style="color:#1d4ed8">Đối chiếu: '+esc(x)+'</li>').join('')}${v.ok?'<li class="validation-ok">Đạt điều kiện lưu: đủ 7 nhân viên và đúng 39 chương trình.</li>':''}</ul><details open><summary>Đối chiếu chi tiết 39 chương trình (Thực hiện • Target • %)</summary><div style="overflow:auto;max-height:420px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px"><thead><tr><th style="text-align:left;padding:6px">NHÓM</th><th style="text-align:left;padding:6px">CHƯƠNG TRÌNH</th><th style="text-align:right;padding:6px">THỰC HIỆN</th><th style="text-align:right;padding:6px">TARGET</th><th style="text-align:right;padding:6px">% HT</th></tr></thead><tbody>${['CE','DV','ICT'].flatMap(g=>allReports.filter(r=>r.reportType==='race').flatMap(r=>r.programs||[]).filter(x=>x.group===g).map(x=>`<tr><td style="padding:6px;border-top:1px solid #e5e7eb">${g}</td><td style="padding:6px;border-top:1px solid #e5e7eb">${esc(x.name)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.actual==null?'—':fmt(x.actual)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.target==null?'—':fmt(x.target)}</td><td style="padding:6px;text-align:right;border-top:1px solid #e5e7eb">${x.percent==null?'—':Number(x.percent).toFixed(1)+'%'}</td></tr>`)).join('')}</tbody></table></div></details><details><summary>Xem văn bản OCR thô để đối chiếu</summary>${allReports.map((r,i)=>`<h4>Ảnh ${i+1}: ${esc(r.sourceImage)}</h4><pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:11px">${esc(r._rawText||'')}</pre>`).join('')}</details><button class="btn" id="confirmOCRBtn" ${v.ok?'':'disabled'}>Xác nhận & lưu dữ liệu</button> <button class="btn secondary" id="cancelOCRBtn">Hủy preview</button>${v.ok?'<p class="validation-ok">Có thể xác nhận và lưu. Target/% chưa đọc được sẽ giữ null; không tự điền.</p>':'<p class="validation-errors"><b>Chưa thể lưu.</b> Nút xác nhận đang khóa vì còn lỗi bắt buộc ở danh sách trên. Dashboard cũ được giữ nguyên.</p>'}</div>`;
   document.getElementById('ocrText').textContent=JSON.stringify(data,null,2);
   document.getElementById('confirmOCRBtn')?.addEventListener('click',async()=>{
    const cb=document.getElementById('confirmOCRBtn');cb.disabled=true;cb.textContent='Đang lưu…';
@@ -1224,7 +1240,7 @@ async function runOCR(){
     // Không gọi LOAD ngay sau SAVE: backend có thể trả cache/phiên bản cũ,
     // khiến dữ liệu vừa OCR bị ghi đè trên dashboard bằng số liệu cũ.
     const finalCheck=validatePreview(data.images);
-    if(!finalCheck.ok)throw Error('Dữ liệu không còn đạt điều kiện lưu: '+[...finalCheck.pending,...finalCheck.warnings].join(' | '));
+    if(!finalCheck.ok)throw Error('Dữ liệu không còn đạt điều kiện lưu: '+[...finalCheck.pending,...finalCheck.errors].join(' | '));
     const saved=await apiCall('save',{data:{confirmed:true,reports:data.images,clientVersion:DMX294_VERSION,clientBuild:DMX294_BUILD_ID}});
     // Dùng đúng dữ liệu vừa xác nhận làm nguồn render sau khi SAVE thành công.
     applyGeminiReports(data.images);
