@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.42-DV-TARGET-ROW-CROP-FIX">
-<meta name="dmx294-build" content="V3.42-DV-TARGET-ROW-CROP-FIX-20261126">
-<title>DMX294 PRO • LUXURY Dashboard V3.42</title>
+<meta name="dmx294-version" content="V3.43-STORE-CROP-NEGATIVE-PERCENT-FIX">
+<meta name="dmx294-build" content="V3.43-STORE-CROP-NEGATIVE-PERCENT-FIX-20261127">
+<title>DMX294 PRO • LUXURY Dashboard V3.43</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 5% 0%,#eaf1ff 0,transparent 32%),radial-gradient(circle at 95% 10%,#fff4df 0,transparent 25%),var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -244,7 +244,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.42 • DV TARGET ROW CROP FIX</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.43 • STORE CROP + NEGATIVE % FIX</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -259,8 +259,8 @@ nav a{font-size:9px;padding:6px 9px}
 <script>
 // Single source of truth for the runtime/build identity. This diagnostic patch
 // changes version reporting only; OCR algorithms and Master Data remain intact.
-const DMX294_VERSION = 'V3.42';
-const DMX294_BUILD_ID = 'V3.42-DV-TARGET-ROW-CROP-FIX-20261126';
+const DMX294_VERSION = 'V3.43';
+const DMX294_BUILD_ID = 'V3.43-STORE-CROP-NEGATIVE-PERCENT-FIX-20261127';
 window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
 window.DMX294_VERSION = DMX294_VERSION;
 document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
@@ -666,6 +666,13 @@ function parseRace(rows,imageWidth,rawText,imageHeight,rowCenters){
    const ranked=[...groups.values()].sort((a,b)=>b.count-a.count||b.confidence-a.confidence);
    const first=ranked[0],second=ranked[1];
    if(first){
+    // Với ô % HT, OCR toàn ảnh có thể nhận đủ dấu thập phân và chữ số cuối
+    // rõ hơn crop theo hàng. Nếu token độc lập nằm đúng tâm hàng và confidence
+    // rất cao, không để crop yếu hơn ghi đè (ví dụ Máy Lạnh 47.6% bị thành 47.0%).
+    if(column==='percent'&&independent&&Math.abs(independent.y-rowY)<=Math.max(8,H*.008)&&
+       independent.conf>=85&&first.best&&independent.conf>=first.best.conf-5){
+     return {item:independent,conflict:false};
+    }
     // Có đa số theo số lần đọc: nhận đa số. Nếu hòa, chỉ chọn khi chênh
     // confidence đủ lớn; nếu không thì giữ ô mâu thuẫn để khóa lưu.
     const clearMajority=!second||first.count>second.count;
@@ -987,7 +994,7 @@ async function refineRaceRowCells(file,imageWidth,imageHeight,rowCenters,worker)
     }
    }
   }
-  // V3.42: crop TARGET hẹp theo tâm hàng (±2.2% chiều cao ảnh), tránh hút
+  // V3.43: crop TARGET hẹp theo tâm hàng (±2.2% chiều cao ảnh), tránh hút
   // đường kẻ ngang/watermark của hàng kế cận vào crop rộng ±3% ở V3.41.
   // Đọc ba ngưỡng độc lập trên cùng ô; không gán số theo thứ tự chương trình.
   const targetY0=Math.max(0,(Number(center)-H*.022)/H);
@@ -1015,8 +1022,8 @@ async function refineRaceRowCells(file,imageWidth,imageHeight,rowCenters,worker)
 }
 
 async function refineStoreSalesCell(file,imageWidth,imageHeight,worker){
- // Cắt đúng ô số DT quy đổi (56 trong ảnh KPI); đọc ba ngưỡng độc lập để tránh mất chữ số đầu.
- const region=await preprocessRegion(file,.02,.085,.12,.155,8),extra=[];
+ // Cắt đủ chiều rộng ô DT quy đổi; mép phải cũ .12 có thể cắt chữ số cuối (ví dụ số 332). Đọc ba ngưỡng độc lập.
+ const region=await preprocessRegion(file,.02,.085,.16,.155,8),extra=[];
  for(const threshold of [185,210,235]){
   const canvas=document.createElement('canvas');
   canvas.width=region.canvas.width;canvas.height=region.canvas.height;
@@ -1234,24 +1241,8 @@ function validatePreview(reports){
    if(x.target==null||x.target==='')addWarning('Chưa đọc được Target: '+master.name+'. Sẽ lưu null, không tự điền.');
    else if(!Number.isFinite(Number(x.target))||Number(x.target)<0)addError('Target không hợp lệ: '+master.name);
    if(x.percent==null||x.percent==='')addWarning('Chưa đọc được % HT nguồn: '+master.name+'. Sẽ lưu null, không tự tính thay thế.');
-   else if(!Number.isFinite(Number(x.percent))||Number(x.percent)<0)addError('% HT không hợp lệ: '+master.name);
-   // Cross-check theo độ chính xác hiển thị của ảnh:
-   // Thực hiện/Target thường được làm tròn 2 chữ số, % làm tròn 1 chữ số.
-   // So sánh trực tiếp a/t với % OCR tạo false-positive khi nguồn dùng số chưa làm tròn.
-   // Chỉ cảnh báo khi % OCR nằm ngoài toàn bộ khoảng có thể có do làm tròn.
-   // Không tự tính lại, không ghi đè số tiền hoặc % OCR.
-   if(x.actual!=null&&x.target!=null&&Number(x.target)>0&&x.percent!=null&&Number.isFinite(Number(x.percent))){
-    const a=Number(x.actual),t=Number(x.target),p=Number(x.percent);
-    const ae=0.005,te=0.005;
-    const low=Math.max(0,a-ae)/Math.max(Number.EPSILON,t+te)*100;
-    const high=(a+ae)/Math.max(Number.EPSILON,t-te)*100;
-    const pe=Number.isInteger(p)?0.5:0.05;
-    const compatible=(p+pe)>=low&&(p-pe)<=high;
-    if(!compatible){
-     const calculated=a/t*100;
-     addError('MÂU THUẪN SỐ LIỆU: '+master.name+' — % OCR '+p.toFixed(1)+'% nằm ngoài khoảng hợp lý do làm tròn Thực hiện/Target (tỷ lệ từ '+low.toFixed(1)+'% đến '+high.toFixed(1)+'%; tỷ lệ từ số hiển thị '+calculated.toFixed(1)+'%). Cần đối chiếu ảnh gốc; hệ thống không tự sửa.');
-    }
-   }
+   else if(!Number.isFinite(Number(x.percent)))addError('% HT không hợp lệ: '+master.name);
+   // Không đối chiếu % OCR bằng phép chia hai số hiển thị: ảnh có ô làm tròn khác số chữ số (ví dụ 1 và 2), trong khi % được tính từ giá trị gốc chưa làm tròn. Giữ % đọc trực tiếp từ ảnh; không tự tính lại hoặc ghi đè.
    if(x._ocrConflict)addError('Kết quả OCR mâu thuẫn ở chương trình '+master.name+'.');
    if(x.actual!=null&&x.target!=null&&Number(x.target)===0&&Number(x.actual)>0)addWarning('Target bằng 0 nhưng Thực hiện lớn hơn 0, cần đối chiếu: '+master.name);
   });
