@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.46-STAFF-NEGATIVE-AND-READABLE-NO-HSCROLL">
-<meta name="dmx294-build" content="V3.46-STAFF-NEGATIVE-AND-READABLE-NO-HSCROLL-20261128">
+<meta name="dmx294-version" content="V3.47-STAFF-NEGATIVE-AND-READABLE-NO-HSCROLL">
+<meta name="dmx294-build" content="V3.47-STAFF-NEGATIVE-UNICODE-MINUS-ROW-VALIDATION-20261128">
 <title>DMX294 PRO • LUXURY Dashboard V3.45</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
@@ -206,7 +206,7 @@ nav a{font-size:9px;padding:6px 9px}
 }
 
 
-/* V3.46 — readable typography without horizontal scrolling */
+/* V3.47 — readable typography without horizontal scrolling */
 .k-value{font-size:clamp(27px,3vw,36px)!important}
 .k-label{font-size:12px!important}
 .k-foot{font-size:10px!important}
@@ -253,7 +253,7 @@ nav a{font-size:9px;padding:6px 9px}
 <div class="wrap">
 <header>
  <div class="brand"><div class="mark">D</div><div><h1>DMX 294 <span style="color:#2563eb">PRO</span></h1><p>SALES INTELLIGENCE DASHBOARD • OCR BÁO CÁO • PHÂN TÍCH DOANH THU</p></div></div>
- <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.46 • INTEGER DISPLAY • 28/11/2026</span></div>
+ <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.47 • INTEGER DISPLAY • 28/11/2026</span></div>
 </header>
 <nav><a href="#overview">Tổng quan</a><a href="#staff">Nhân viên</a><a href="#race">Thi đua</a><a href="#settings">Data & Target</a></nav>
 <section id="overview">
@@ -286,7 +286,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.46 • INTEGER DISPLAY</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.47 • INTEGER DISPLAY</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -301,8 +301,8 @@ nav a{font-size:9px;padding:6px 9px}
 <script>
 // Single source of truth for the runtime/build identity. This diagnostic patch
 // changes version reporting only; OCR algorithms and Master Data remain intact.
-const DMX294_VERSION = 'V3.46';
-const DMX294_BUILD_ID = 'V3.46-STAFF-NEGATIVE-AND-READABLE-NO-HSCROLL-20261128';
+const DMX294_VERSION = 'V3.47';
+const DMX294_BUILD_ID = 'V3.47-STAFF-NEGATIVE-UNICODE-MINUS-ROW-VALIDATION-20261128';
 window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
 window.DMX294_VERSION = DMX294_VERSION;
 document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
@@ -560,14 +560,14 @@ function parseStaff(rows,imageWidth,imageHeight,rowCenters){
    const candidates=[];
    for(const w of all){
     const x=((w.x0+w.x1)/2)/W,y=(w.y0+w.y1)/2;
-    let raw=String(w.t||'').replace(/\s/g,'').trim();
+    let raw=String(w.t||'').replace(/\s/g,'').replace(/[−–—]/g,'-').trim();
     if(/^\d{1,3}(?:[.,]\d{1,2})?$/.test(raw)){
      // Tesseract đôi khi tách dấu âm thành token riêng; chỉ ghép dấu
      // nằm ngay bên trái chữ số trong cùng cột và cùng hàng.
      const sign=all.find(m=>{
-      const mt=String(m.t||'').trim(),my=(m.y0+m.y1)/2;
-      return /^[-−–]$/.test(mt)&&Math.abs(my-y)<=Math.max(5,H*.006)&&
-       m.x1<=w.x0+2&&w.x0-m.x1<=W*.025&&
+      const mt=String(m.t||'').replace(/[−–—]/g,'-').trim(),my=(m.y0+m.y1)/2;
+      return /^-$/.test(mt)&&Math.abs(my-y)<=Math.max(8,H*.009)&&
+       m.x1<=w.x0+Math.max(3,W*.004)&&w.x0-m.x1<=W*.04&&
        ((m.x0+m.x1)/2)/W>=lo&&((m.x0+m.x1)/2)/W<=hi;
      });
      if(sign)raw='-'+raw;
@@ -961,7 +961,7 @@ async function refineStaffNumericCells(file,words,imageWidth,imageHeight,worker,
  ];
  const hasCell=(center,col)=> (words||[]).some(w=>{
   const b=w.bbox||{},x=(Number(b.x0||0)+Number(b.x1||0))/(2*W),y=(Number(b.y0||0)+Number(b.y1||0))/2;
-  const raw=String(w.text||'').replace(/\s/g,'').trim();
+  const raw=String(w.text||'').replace(/\s/g,'').replace(/[−–—]/g,'-').trim();
   return x>=col.lo&&x<=col.hi&&Math.abs(y-center)<=H*.022&&/^-?\d{1,3}(?:[.,]\d{1,2})?$/.test(raw);
  });
  for(const a of unique){
@@ -975,7 +975,7 @@ async function refineStaffNumericCells(file,words,imageWidth,imageHeight,worker,
     await worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM.SINGLE_LINE,preserve_interword_spaces:'1',tessedit_char_whitelist:'-0123456789.,'});
     const result=await worker.recognize(cell.canvas);
     for(const w of result.data?.words||[]){
-     const value=String(w.text||'').replace(/\s/g,'').trim();
+     const value=String(w.text||'').replace(/\s/g,'').replace(/[−–—]/g,'-').trim();
      if(!/^-?\d{1,3}(?:[.,]\d{1,2})?$/.test(value))continue;
      extra.push({text:value,confidence:Number(w.confidence||0),_crop:true,_targeted:true,_column:col.key,_threshold:'staff-'+col.key+'-'+threshold,_mode:'single-word-cell',bbox:{
       x0:cell.offsetX+w.bbox.x0/cell.scale,y0:cell.offsetY+w.bbox.y0/cell.scale,
