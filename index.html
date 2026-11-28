@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.45.1-INTEGER-DISPLAY-CONSISTENCY">
-<meta name="dmx294-build" content="V3.45.1-INTEGER-DISPLAY-CONSISTENCY-20261128">
+<meta name="dmx294-version" content="V3.45.2-INTEGER-DISPLAY-SMALL-VALUE-SAFETY">
+<meta name="dmx294-build" content="V3.45.2-INTEGER-DISPLAY-SMALL-VALUE-SAFETY-20261128">
 <title>DMX294 PRO • LUXURY Dashboard V3.45</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
@@ -211,7 +211,7 @@ nav a{font-size:9px;padding:6px 9px}
 <div class="wrap">
 <header>
  <div class="brand"><div class="mark">D</div><div><h1>DMX 294 <span style="color:#2563eb">PRO</span></h1><p>SALES INTELLIGENCE DASHBOARD • OCR BÁO CÁO • PHÂN TÍCH DOANH THU</p></div></div>
- <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.45.1 • INTEGER DISPLAY • 28/11/2026</span></div>
+ <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.45.2 • INTEGER DISPLAY • 28/11/2026</span></div>
 </header>
 <nav><a href="#overview">Tổng quan</a><a href="#staff">Nhân viên</a><a href="#race">Thi đua</a><a href="#settings">Data & Target</a></nav>
 <section id="overview">
@@ -244,7 +244,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.45.1 • INTEGER DISPLAY</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.45.2 • INTEGER DISPLAY</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -259,8 +259,8 @@ nav a{font-size:9px;padding:6px 9px}
 <script>
 // Single source of truth for the runtime/build identity. This diagnostic patch
 // changes version reporting only; OCR algorithms and Master Data remain intact.
-const DMX294_VERSION = 'V3.45.1';
-const DMX294_BUILD_ID = 'V3.45.1-INTEGER-DISPLAY-CONSISTENCY-20261128';
+const DMX294_VERSION = 'V3.45.2';
+const DMX294_BUILD_ID = 'V3.45.2-INTEGER-DISPLAY-SMALL-VALUE-SAFETY-20261128';
 window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
 window.DMX294_VERSION = DMX294_VERSION;
 document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
@@ -318,7 +318,13 @@ function renderRaceGroup(group,id){
 
 // V3.45: chỉ làm tròn ở lớp hiển thị; dữ liệu OCR gốc và phép tính vẫn giữ độ chính xác ban đầu.
 function roundInteger(n){const value=Number(n);if(!Number.isFinite(value))return value;const rounded=Math.round(Math.abs(value));return value<0&&rounded!==0?-rounded:rounded}
-function fmt(n){return roundInteger(n).toLocaleString("vi-VN")}
+function fmt(n){
+ const value=Number(n);
+ if(!Number.isFinite(value))return '—';
+ // Preserve sign and non-zero magnitude when integer rounding would hide a small value (e.g. -0.23 or 0.11).
+ if(value!==0&&Math.round(Math.abs(value))===0)return value.toLocaleString("vi-VN",{minimumFractionDigits:2,maximumFractionDigits:2});
+ return roundInteger(value).toLocaleString("vi-VN");
+}
 function fmtPct(n){return roundInteger(n).toLocaleString("vi-VN")+"%"}
 function pct(a,b){return b>0?a/b*100:0}
 function render(){
