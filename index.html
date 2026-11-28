@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<meta name="dmx294-version" content="V3.47-STAFF-NEGATIVE-AND-READABLE-NO-HSCROLL">
-<meta name="dmx294-build" content="V3.47-STAFF-NEGATIVE-UNICODE-MINUS-ROW-VALIDATION-20261128">
+<meta name="dmx294-version" content="V3.48-STAFF-NEGATIVE-AND-READABLE-NO-HSCROLL">
+<meta name="dmx294-build" content="V3.48-STAFF-SALES-CELL-REOCR-SIGN-MAJORITY-20261128">
 <title>DMX294 PRO • LUXURY Dashboard V3.45</title>
 <style>
 :root{--bg:#f5f7fb;--card:#fff;--ink:#17233b;--muted:#77849a;--line:#e7ebf2;--blue:#2563eb;--blue2:#60a5fa;--gold:#c6a15b;--green:#059669;--red:#dc2626;--amber:#d97706;--shadow:0 12px 32px rgba(28,48,89,.07)}
@@ -206,7 +206,7 @@ nav a{font-size:9px;padding:6px 9px}
 }
 
 
-/* V3.47 — readable typography without horizontal scrolling */
+/* V3.48 — readable typography without horizontal scrolling */
 .k-value{font-size:clamp(27px,3vw,36px)!important}
 .k-label{font-size:12px!important}
 .k-foot{font-size:10px!important}
@@ -253,7 +253,7 @@ nav a{font-size:9px;padding:6px 9px}
 <div class="wrap">
 <header>
  <div class="brand"><div class="mark">D</div><div><h1>DMX 294 <span style="color:#2563eb">PRO</span></h1><p>SALES INTELLIGENCE DASHBOARD • OCR BÁO CÁO • PHÂN TÍCH DOANH THU</p></div></div>
- <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.47 • INTEGER DISPLAY • 28/11/2026</span></div>
+ <div class="header-right"><span class="live"><span class="dot"></span> LUXURY EDITION</span><span class="stamp" id="updated">V3.48 • INTEGER DISPLAY • 28/11/2026</span></div>
 </header>
 <nav><a href="#overview">Tổng quan</a><a href="#staff">Nhân viên</a><a href="#race">Thi đua</a><a href="#settings">Data & Target</a></nav>
 <section id="overview">
@@ -286,7 +286,7 @@ nav a{font-size:9px;padding:6px 9px}
  <div class="data-grid">
   <div class="panel"><div class="panel-top"><h3>Target doanh thu QĐ</h3><span class="pill">STORE</span></div><div class="formbox"><label for="targetInput">Mục tiêu DThu QĐ (triệu đồng)</label><input id="targetInput" type="number" min="0" value=""><small>Map trực tiếp vào KPI tổng quan và % hoàn thành.</small><div class="actions"><button class="btn" onclick="applyTarget()">Cập nhật Target</button></div></div></div>
   <div class="panel"><div class="panel-top"><h3>Target ngày nhân viên QĐ</h3><span class="pill">AUTO MAP</span></div><div class="formbox"><label for="staffTargetInput">Target ngày QĐ cho mỗi nhân viên (triệu đồng)</label><input id="staffTargetInput" type="number" min="0" value="25" placeholder="Nhập target nhân viên"><small>Chỉ nhập một con số Target ngày. Hệ thống tự map cho tất cả nhân viên có doanh thu; không nhập USER hoặc tên nhân viên.</small><div class="actions"><button class="btn" onclick="applyStaffTarget()">Áp dụng Target NV</button><button class="btn secondary" onclick="resetTargets()">Reset mẫu</button></div><small>Prototype lưu tạm trên trình duyệt hiện tại. Chưa đồng bộ máy khác.</small></div></div>
-  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.47 • INTEGER DISPLAY</span></div><div class="formbox">
+  <div class="panel" style="grid-column:1/-1"><div class="panel-top"><h3>Tải ảnh báo cáo để lấy dữ liệu</h3><span class="pill" id="ocrBuildBadge">OCR MIỄN PHÍ V3.48 • INTEGER DISPLAY</span></div><div class="formbox">
 <label for="apiTokenInput">DASHBOARD_TOKEN (nếu Apps Script đã bật bảo vệ)</label><input id="apiTokenInput" type="password" placeholder="Nhập token đã cấu hình trong Script Properties (không phải Gemini API Key)"><small>Token chỉ dùng để xác thực API; không nhập GEMINI_API_KEY tại đây.</small><br><label for="reportImage">Chọn ảnh báo cáo (JPG/PNG)</label><input id="reportImage" type="file" accept="image/*" multiple>
 <small>Chọn một hoặc nhiều ảnh. Hệ thống OCR sẽ đọc chữ trong ảnh để bạn kiểm tra.</small>
 <div id="imagePreview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"></div>
@@ -301,8 +301,8 @@ nav a{font-size:9px;padding:6px 9px}
 <script>
 // Single source of truth for the runtime/build identity. This diagnostic patch
 // changes version reporting only; OCR algorithms and Master Data remain intact.
-const DMX294_VERSION = 'V3.47';
-const DMX294_BUILD_ID = 'V3.47-STAFF-NEGATIVE-UNICODE-MINUS-ROW-VALIDATION-20261128';
+const DMX294_VERSION = 'V3.48';
+const DMX294_BUILD_ID = 'V3.48-STAFF-SALES-CELL-REOCR-SIGN-MAJORITY-20261128';
 window.DMX294_RUNTIME_BUILD = DMX294_BUILD_ID;
 window.DMX294_VERSION = DMX294_VERSION;
 document.title = `DMX294 PRO • LUXURY Dashboard ${DMX294_VERSION}`;
@@ -591,7 +591,9 @@ function parseStaff(rows,imageWidth,imageHeight,rowCenters){
     const counts=new Map();votes.forEach(x=>counts.set(x.v,(counts.get(x.v)||0)+1));
     const majority=[...counts.entries()].sort((a,b)=>b[1]-a[1])[0];
     if(majority&&majority[1]>votes.length/2){
-     if(base&&base.v!==majority[0])return {value:null,conflict:true};
+     // Nhiều lượt OCR đọc riêng cùng ô đồng thuận được ưu tiên hơn OCR toàn bảng.
+     // Đặc biệt: OCR toàn bảng có thể bỏ dấu âm đứng sát chữ số (ví dụ -1 thành 1).
+     if(base&&base.v!==majority[0]&&majority[1]<2)return {value:null,conflict:true};
      return {value:majority[0],conflict:false};
     }
     if(votes.length===1){
@@ -966,7 +968,10 @@ async function refineStaffNumericCells(file,words,imageWidth,imageHeight,worker,
  });
  for(const a of unique){
   for(const col of columns){
-   if(hasCell(a.center,col))continue;
+   // Cột Doanh thu QĐ luôn được đọc lại riêng từng ô, kể cả khi OCR toàn bảng
+   // đã trả về số dương. Điều này bắt lỗi dấu âm bị rơi (ví dụ -1 thành 1).
+   // Cột trả góp chỉ đọc lại khi OCR toàn bảng bỏ sót ô.
+   if(col.key!=='sales'&&hasCell(a.center,col))continue;
    // Ba lần đọc độc lập trên cùng ô, thay đổi ngưỡng nhị phân để tránh watermark/lưới.
    for(const threshold of [190,210,230]){
     const y0=Math.max(0,(a.center-H*.022)/H),y1=Math.min(1,(a.center+H*.022)/H);
